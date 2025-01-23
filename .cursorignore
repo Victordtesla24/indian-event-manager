@@ -1,0 +1,36 @@
+# Ignore temporary and system files
+*.tmp
+*.log
+*.bak
+.DS_Store
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore editor-specific files
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Ignore dependency directories
+node_modules/
+
+# Ignore environment files
+.env
+.env.*
+
+# Ignore Streamlit cache
+.streamlit/
+
+# Ignore build and distribution directories
+build/
+dist/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore any local configuration files
+config.local.yaml

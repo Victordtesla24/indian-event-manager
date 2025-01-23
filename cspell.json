@@ -1,0 +1,11 @@
+{
+  "version": "0.2",
+  "enabled": false,
+  "language": "en",
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    ".git/**"
+  ]
+} 
