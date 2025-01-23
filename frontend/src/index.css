@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-off-white;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    @apply absolute inset-0 bg-geometric-pattern opacity-30;
+    z-index: -2;
+  }
+
+  body::after {
+    content: '';
+    @apply absolute inset-0 bg-peacock-feather bg-no-repeat bg-[length:800px_800px] bg-center opacity-20;
+    z-index: -1;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-white text-peacock-indigo border-2 border-peacock-blue px-6 py-3 rounded-md hover:bg-peacock-blue hover:text-white transition-all duration-300 shadow-card hover:shadow-card-hover transform hover:-translate-y-0.5 font-medium tracking-wide;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-peacock-blue border-2 border-peacock-blue/30 px-6 py-3 rounded-md hover:bg-peacock-blue/10 hover:border-peacock-blue transition-all duration-300 shadow-card hover:shadow-card-hover transform hover:-translate-y-0.5 font-medium tracking-wide;
+  }
+
+  .input-primary {
+    @apply w-full px-4 py-2 bg-white/80 backdrop-blur-sm border-2 border-peacock-blue/30 rounded-md focus:outline-none focus:ring-2 focus:ring-peacock-blue focus:border-transparent transition-colors shadow-emboss;
+  }
+
+  .card {
+    @apply bg-white/90 backdrop-blur-sm rounded-lg border border-peacock-blue/20 shadow-card hover:shadow-card-hover transition-all duration-300 transform hover:-translate-y-1 overflow-hidden p-8;
+  }
+
+  .nav-menu {
+    @apply bg-gradient-to-r from-peacock-teal via-peacock-blue to-peacock-indigo text-white border-b-2 border-peacock-blue/20;
+  }
+
+  .footer {
+    @apply bg-gradient-to-r from-peacock-teal via-peacock-blue to-peacock-indigo text-white border-t-2 border-peacock-blue/20;
+  }
+
+  .section-title {
+    @apply text-3xl font-bold text-peacock-blue mb-4;
+  }
+
+  .section-divider {
+    @apply w-24 h-1 bg-gradient-to-r from-peacock-teal to-peacock-blue mx-auto;
+  }
+
+  .event-card-gradient {
+    @apply bg-gradient-to-br from-peacock-lime-light via-peacock-teal-light to-peacock-blue-light;
+  }
+
+  .sponsor-card-gradient {
+    @apply bg-gradient-to-br from-peacock-blue-light via-peacock-indigo-light to-peacock-purple-light;
+  }
+
+  /* Form Styles */
+  input[type="checkbox"] {
+    @apply rounded border-peacock-blue/30 text-peacock-blue focus:ring-peacock-blue;
+  }
+
+  select {
+    @apply appearance-none bg-white/80 backdrop-blur-sm;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230077BE' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+
+  /* Transitions */
+  .transition-all {
+    @apply duration-300 ease-in-out;
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply transform transition-transform duration-300 hover:-translate-y-0.5;
+  }
+
+  /* Shadows */
+  .shadow-emboss {
+    box-shadow: 
+      inset 2px 2px 4px rgba(255, 255, 255, 0.9),
+      inset -2px -2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .shadow-card {
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .shadow-card-hover {
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
