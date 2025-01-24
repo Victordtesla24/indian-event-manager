@@ -13,7 +13,9 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: DATABASE_URL
-        value: postgres://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager
+        value: postgresql://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager
+      - key: SQLALCHEMY_DATABASE_URI
+        value: postgresql://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager?sslmode=require
       - key: SECRET_KEY
         value: DxvVnmQ0wFdZBwNcmyawYEISCpdos-1PhcRc1wf20PU
       - key: ENVIRONMENT
