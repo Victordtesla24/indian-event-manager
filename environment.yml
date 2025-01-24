@@ -1,0 +1,62 @@
+name: indian-event-manager
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Core Setup
+  - python=3.11
+  - pip=24.2
+  - wheel=0.45.1
+  - setuptools=75.8.0
+  
+  # Database
+  - sqlalchemy=2.0.37
+  - psycopg2=2.9.10
+  - alembic=1.13.1
+  
+  # FastAPI
+  - fastapi=0.109.0
+  - uvicorn=0.27.0
+  
+  # Security
+  - python-jose=3.3.0
+  - bcrypt=4.1.2
+  - passlib=1.7.4
+  - cryptography=41.0.7
+  
+  # Performance
+  - ujson=5.9.0
+  - orjson=3.9.10
+  - cachetools=5.3.2
+  
+  # Monitoring
+  - prometheus-client=0.19.0
+  
+  # Additional dependencies via pip
+  - pip:
+    # Type hints and validation
+    - typing-extensions==4.7.1
+    - annotated-types==0.6.0
+    - pydantic==1.8.2
+    
+    # Database extras
+    - SQLAlchemy[asyncio]==2.0.37
+    
+    # FastAPI extras
+    - python-multipart==0.0.6
+    - email-validator==2.1.0.post1
+    
+    # Configuration
+    - python-dotenv==1.0.0
+    - python-decouple==3.8
+    
+    # Logging
+    - python-json-logger==2.0.7
+    - structlog==24.1.0
+    
+    # Security
+    - secure==0.3.0
+    - certifi==2024.12.14
+
+variables:
+  PYTHONPATH: ${CONDA_PREFIX}/lib/python3.11/site-packages

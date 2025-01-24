@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app import crud, schemas
 from app.db import base  # noqa: F401
-from app.models.user import UserRole
+from app.models.user import UserRole, AdminLevel, AdminPermission
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,9 @@ def init_db(db: Session) -> None:
             password="admin123",
             is_superuser=True,
             full_name="Admin User",
-            role=UserRole.ADMIN
+            role=UserRole.ADMIN,
+            admin_level=AdminLevel.SUPER_ADMIN,
+            permissions=[perm for perm in AdminPermission]
         )
         admin = crud.user.create(db, obj_in=admin_in)
         logger.info("Created admin superuser")

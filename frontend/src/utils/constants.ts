@@ -23,6 +23,15 @@ export const ROUTES = {
   EVENTS: '/events',
   LOGIN: '/login',
   REGISTER: '/register',
+  ADMIN: {
+    DASHBOARD: '/admin/dashboard',
+    EVENTS: '/admin/events',
+    USERS: '/admin/users',
+    MARKETING: '/admin/marketing',
+  },
+  SPONSOR: {
+    DASHBOARD: '/sponsor/dashboard',
+  },
 } as const;
 
 // Background Images

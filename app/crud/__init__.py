@@ -1,11 +1,15 @@
-from app.crud.user import user  # noqa: F401
-from app.crud.event import event  # noqa: F401
-from app.crud.sponsor import sponsor  # noqa: F401
-from app.crud.banner import banner  # noqa: F401
+from .admin import admin
+from .banner import banner
+from .event import event
+from .sponsor import sponsor
+from .user import user
+from .marketing import marketing_campaign
 
 __all__ = [
-    "user",
+    "admin",
+    "banner",
     "event",
     "sponsor",
-    "banner",
+    "user",
+    "marketing_campaign",
 ]

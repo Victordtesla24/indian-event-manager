@@ -10,15 +10,15 @@ import EventApproval from './pages/admin/EventApproval';
 import SponsorDashboard from './pages/sponsor/Dashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
-import Background from './components/layout/Background';
+import { UserRole } from './types/user';
+import Layout from './components/layout/Layout';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="app-wrapper min-h-screen relative">
-          <Background />
-          <div className="content-layer relative z-10">
+        <Layout>
+          <div className="relative z-10">
             <Navbar />
             <Routes>
               <Route path="/" element={<Home />} />
@@ -36,7 +36,7 @@ function App() {
               <Route
                 path="/admin/dashboard"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                     <AdminDashboard />
                   </ProtectedRoute>
                 }
@@ -44,7 +44,7 @@ function App() {
               <Route
                 path="/admin/events"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                     <EventApproval />
                   </ProtectedRoute>
                 }
@@ -52,14 +52,14 @@ function App() {
               <Route
                 path="/sponsor/dashboard"
                 element={
-                  <ProtectedRoute allowedRoles={['sponsor']}>
+                  <ProtectedRoute allowedRoles={[UserRole.SPONSOR]}>
                     <SponsorDashboard />
                   </ProtectedRoute>
                 }
               />
             </Routes>
           </div>
-        </div>
+        </Layout>
       </AuthProvider>
     </Router>
   );

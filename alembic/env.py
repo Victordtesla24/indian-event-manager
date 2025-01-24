@@ -1,13 +1,13 @@
 from logging.config import fileConfig
+from typing import Dict, Any
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from typing import Dict, Any, cast
 
 from alembic import context
 
-from app.db.base import Base
 from app.core.config import settings
+from app.db.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,14 +24,10 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
-
-def get_url():
-    return str(settings.SQLALCHEMY_DATABASE_URI)
+def get_url() -> str:
+    """Get database URL from settings."""
+    return str(settings.DATABASE_URL)
 
 
 def run_migrations_offline() -> None:
@@ -65,8 +61,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    section = config.get_section(config.config_ini_section)
-    cfg: Dict[str, Any] = cast(Dict[str, Any], section or {})
+    cfg: Dict[str, Any] = config.get_section(config.config_ini_section) or {}
     cfg["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
         cfg,
@@ -76,8 +71,7 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection,
-            target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata
         )
 
         with context.begin_transaction():

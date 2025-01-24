@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth, UserRole } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { UserRole } from '../../types/user';
 
 interface User {
   id: string;

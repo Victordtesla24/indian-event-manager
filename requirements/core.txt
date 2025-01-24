@@ -1,0 +1,28 @@
+# Core dependencies - Install first
+wheel==0.45.1  # Required for building packages
+setuptools==75.8.0  # Required for building packages
+pip>=24.2  # Required for installing packages
+
+# Type hints - Install second
+typing-extensions==4.7.1  # Required by pydantic
+annotated-types==0.6.0  # Required by pydantic
+
+# Data validation - Install third
+pydantic==1.8.2  # Data validation using Python type annotations
+
+# Configuration - Install fourth
+python-dotenv==1.0.0  # Load environment variables from .env file
+python-decouple==3.8  # Configuration management
+email-validator==2.1.0.post1  # Email validation
+
+# Security - Install fifth
+bcrypt==4.1.2  # Password hashing
+passlib==1.7.4  # Password hashing library
+cryptography==41.0.7  # Cryptography library
+python-jose==3.3.0  # JWT token handling
+
+# File handling - Install sixth
+python-multipart==0.0.6  # Form data parsing
+
+# Comments indicate installation order and dependencies
+# Each group should be installed separately to ensure correct resolution

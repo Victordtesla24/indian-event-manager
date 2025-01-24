@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     events,
     sponsors,
     banners,
+    marketing,
 )
 
 api_router = APIRouter()
@@ -21,4 +22,7 @@ api_router.include_router(
 )
 api_router.include_router(
     admin.router, prefix="/admin", tags=["admin"]
+)
+api_router.include_router(
+    marketing.router, prefix="/marketing", tags=["marketing"]
 )

@@ -31,7 +31,7 @@ const Events = () => {
   ]);
 
   return (
-    <div className="min-h-screen bg-off-white relative">
+    <div className="min-h-screen">
       <div className="relative z-10 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center hero-container p-8 mb-12">

@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { UserRole } from '../../types/user';
+import { ROUTES } from '../../utils/constants';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -55,17 +57,17 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                {user?.role === 'admin' && (
+                {user?.role === UserRole.ADMIN && (
                   <Link
-                    to="/admin"
+                    to={ROUTES.ADMIN.DASHBOARD}
                     className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                   >
                     Admin Dashboard
                   </Link>
                 )}
-                {user?.role === 'sponsor' && (
+                {user?.role === UserRole.SPONSOR && (
                   <Link
-                    to="/sponsor"
+                    to={ROUTES.SPONSOR.DASHBOARD}
                     className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                   >
                     Sponsor Dashboard

@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from app.api.v1.api import api_router
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,6 +11,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Local development
+    "http://localhost:5175",  # Vite development
+    "http://localhost:5176",  # Vite development alternate port
     # Production frontends
     "https://indian-event-manager-6g6m331f4-vics-projects-31447d42.vercel.app",
     "https://indian-event-manager.vercel.app"
@@ -21,8 +24,12 @@ app = FastAPI(
         "A cultural event platform for the Indian community "
         "in Melbourne and Sydney"
     ),
-    version="1.0.0"
+    version="1.0.0",
+    default_response_class=JSONResponse
 )
+
+# Add GZip compression
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 # Configure CORS

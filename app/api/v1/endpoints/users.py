@@ -6,9 +6,12 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
-from app.models.user import UserRole
+from app.models.user import UserRole, AdminPermission
 
 router = APIRouter()
+
+# Permission dependencies
+require_user_management = deps.check_permission(AdminPermission.MANAGE_USERS)
 
 
 @router.get("/", response_model=List[schemas.User])
@@ -16,7 +19,7 @@ def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(require_user_management),
 ) -> Any:
     """
     Retrieve users.
@@ -30,7 +33,7 @@ def create_user(
     *,
     db: Session = Depends(deps.get_db),
     user_in: schemas.UserCreate,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(require_user_management),
 ) -> Any:
     """
     Create new user.
@@ -51,7 +54,7 @@ def update_user_role(
     db: Session = Depends(deps.get_db),
     user_id: str,
     role: UserRole = Body(..., embed=True),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(require_user_management),
 ) -> Any:
     """
     Update user role.
@@ -74,7 +77,7 @@ def update_user_status(
     db: Session = Depends(deps.get_db),
     user_id: str,
     is_active: bool = Body(..., embed=True),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(require_user_management),
 ) -> Any:
     """
     Activate or deactivate user.
@@ -94,7 +97,7 @@ def update_user_status(
 @router.get("/stats/overview", response_model=Dict)
 def get_user_stats(
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(require_user_management),
 ) -> Any:
     """
     Get user statistics.
@@ -160,8 +163,9 @@ def read_user_by_id(
     user = crud.user.get(db, id=user_id)
     if user == current_user:
         return user
-    if not crud.user.is_superuser(current_user):
+    if not current_user.has_permission(AdminPermission.MANAGE_USERS):
         raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
+            status_code=403,
+            detail="The user doesn't have permission to view other users"
         )
     return user

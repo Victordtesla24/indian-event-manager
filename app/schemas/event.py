@@ -34,7 +34,7 @@ class EventInDBBase(EventBase):
     organizer_id: str
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class Event(EventInDBBase):

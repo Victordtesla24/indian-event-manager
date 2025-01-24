@@ -1,25 +1,21 @@
-import '../../styles/background.css';
-
 const Background = () => {
   return (
-    <div className="background-container">
-      <div className="background-section left float-animation">
+    <div className="fixed inset-0 -z-10 grid grid-cols-2 overflow-hidden">
+      <div className="relative">
         <img 
-          src="/images/ganesha1.jpeg"
+          src="/ganesha1.jpeg"
           alt="Ganesha background"
-          className="background-image"
+          className="absolute inset-0 w-full h-full object-cover opacity-20"
           loading="eager"
         />
-        <div className="pattern-overlay" />
       </div>
-      <div className="background-section right sway-animation">
+      <div className="relative">
         <img 
-          src="/images/peacock1.avif"
+          src="/peacock1.avif"
           alt="Peacock background"
-          className="background-image"
+          className="absolute inset-0 w-full h-full object-cover opacity-20"
           loading="eager"
         />
-        <div className="pattern-overlay" />
       </div>
     </div>
   );

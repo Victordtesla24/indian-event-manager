@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { PLACEHOLDER_IMAGE } from '../utils/constants';
-import Background from '../components/layout/Background';
 
 const Home = () => {
   const featuredEvents = [
@@ -23,8 +22,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-off-white relative">
-      <Background />
+    <div className="min-h-screen">
       <div className="relative z-10">
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">

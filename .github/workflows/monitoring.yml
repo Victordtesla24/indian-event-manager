@@ -1,0 +1,114 @@
+name: Dependency Monitoring
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.11'
+          cache: 'pip'
+
+      - name: Backend security audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety
+          pip install -r requirements/base.txt -r requirements/test.txt
+          safety check
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Frontend security audit
+        run: |
+          cd frontend
+          npm ci
+          npm audit
+
+  dependency-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for outdated Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-outdated
+          pip-outdated -f markdown > python-outdated.md
+
+      - name: Check for outdated npm packages
+        run: |
+          cd frontend
+          npm outdated --json > ../npm-outdated.json
+
+      - name: Create issue for outdated dependencies
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const pythonOutdated = fs.readFileSync('python-outdated.md', 'utf8');
+            const npmOutdated = fs.readFileSync('npm-outdated.json', 'utf8');
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Dependency Update Report - ${today}`,
+              body: `
+            # Dependency Update Report
+            
+            ## Python Dependencies
+            ${pythonOutdated}
+            
+            ## NPM Dependencies
+            \`\`\`json
+            ${npmOutdated}
+            \`\`\`
+            
+            Please review these updates and test thoroughly before upgrading.
+            `
+            });
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.11'
+          cache: 'pip'
+
+      - name: Install mypy
+        run: |
+          python -m pip install --upgrade pip
+          pip install mypy types-all
+
+      - name: Run mypy
+        run: mypy app/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Frontend type check
+        run: |
+          cd frontend
+          npm ci
+          npm run typecheck

@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app import crud, models, schemas
+from app import crud, schemas
 from app.api import deps
 from app.core import security
 from app.core.config import settings
@@ -11,7 +11,7 @@ from app.core.config import settings
 router = APIRouter()
 
 
-@router.post("/login", response_model=schemas.Token)
+@router.post("/login", response_model=schemas.TokenWithUser)
 def login(
     db: Session = Depends(deps.get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
@@ -41,6 +41,7 @@ def login(
             user.id, expires_delta=access_token_expires
         ),
         "token_type": "bearer",
+        "user": user
     }
 
 
@@ -60,4 +61,4 @@ def register(
             detail="Email already registered",
         )
     user = crud.user.create(db, obj_in=user_in)
-    return user 
+    return user

@@ -1,0 +1,95 @@
+name: indian-event-manager-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Core Setup
+  - python=3.11
+  - pip=24.2
+  - wheel=0.45.1
+  - setuptools=75.8.0
+  
+  # Database
+  - sqlalchemy=2.0.37
+  - alembic=1.13.1
+  
+  # FastAPI
+  - fastapi=0.108.0
+  - uvicorn=0.27.0
+  
+  # Security
+  - python-jose=3.3.0
+  - bcrypt=4.1.2
+  - passlib=1.7.4
+  - cryptography=41.0.7
+  
+  # Performance
+  - ujson=5.9.0
+  - orjson=3.9.10
+  - cachetools=5.3.2
+  
+  # Development Tools
+  - pytest=7.4.4
+  - pytest-cov=4.1.0
+  - pytest-asyncio=0.23.3
+  - black=24.1.1
+  - isort=5.13.2
+  - flake8=7.0.0
+  - mypy=1.8.0
+  - pre-commit=3.6.0
+  
+  # Debugging
+  - ipython=8.20.0
+  - ipdb=0.13.13
+  - debugpy=1.8.0
+  
+  # Documentation
+  - sphinx=7.2.6
+  
+  # Additional dependencies via pip
+  - pip:
+    # Type hints and validation
+    - typing-extensions==4.9.0
+    - annotated-types==0.6.0
+    - pydantic==2.5.3
+    - pydantic-core==2.14.6
+    - pydantic-settings==2.1.0
+    
+    # Database extras
+    - SQLAlchemy[asyncio]==2.0.37
+    - psycopg2-binary==2.9.10
+    
+    # FastAPI extras
+    - python-multipart==0.0.6
+    - email-validator==2.1.0.post1
+    - httpx==0.27.0
+    
+    # Configuration
+    - python-dotenv==1.0.0
+    - python-decouple==3.8
+    
+    # Logging
+    - python-json-logger==2.0.7
+    - structlog==24.1.0
+    
+    # Security
+    - secure==0.3.0
+    - certifi==2024.12.14
+    
+    # Monitoring
+    - prometheus-client==0.19.0
+    
+    # Development pip dependencies
+    - pytest-mock==3.12.0
+    - pytest-env==1.1.3
+    - pytest-sugar==1.0.0
+    - pytest-xdist==3.5.0
+    - factory-boy==3.3.0
+    - faker==22.5.1
+    - coverage[toml]==7.4.0
+    - ruff==0.1.14
+    - sphinx-autodoc-typehints==1.25.2
+
+variables:
+  PYTHONPATH: ${CONDA_PREFIX}/lib/python3.11/site-packages
+  PYTHONBREAKPOINT: ipdb.set_trace

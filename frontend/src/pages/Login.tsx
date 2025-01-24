@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-
-import { UserRole } from '../contexts/AuthContext';
+import { API_ROUTES } from '../utils/api';
+import { UserRole } from '../types/user';
 
 interface LoginResponse {
   access_token: string;
@@ -13,6 +13,9 @@ interface LoginResponse {
     full_name: string;
     role: UserRole;
     is_active: boolean;
+    is_superuser: boolean;
+    created_at: string;
+    updated_at: string;
   };
 }
 
@@ -38,21 +41,28 @@ const Login = () => {
             email: 'admin@example.com',
             full_name: 'Administrator',
             role: UserRole.ADMIN,
-            is_active: true
+            is_active: true,
+            is_superuser: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         };
-        login(adminData);
+        login(adminData.access_token, adminData.user);
         navigate('/admin/dashboard');
         return;
       }
 
       // Handle regular login through API
-      const response = await fetch('/api/v1/auth/login', {
+      const formData = new URLSearchParams();
+      formData.append('username', username);
+      formData.append('password', password);
+
+      const response = await fetch(API_ROUTES.AUTH.LOGIN, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({ username, password }),
+        body: formData.toString(),
       });
 
       if (!response.ok) {
@@ -60,7 +70,7 @@ const Login = () => {
       }
 
       const data: LoginResponse = await response.json();
-      login(data);
+      login(data.access_token, data.user);
       navigate('/');
     } catch {
       setError('Invalid username or password');
@@ -90,6 +100,7 @@ const Login = () => {
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
               />
             </div>
             <div>
@@ -105,6 +116,7 @@ const Login = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
           </div>
