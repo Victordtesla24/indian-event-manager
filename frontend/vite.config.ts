@@ -23,4 +23,16 @@ export default defineConfig({
   },
   base: '/',
   publicDir: resolve(__dirname, 'public'),
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
 })
