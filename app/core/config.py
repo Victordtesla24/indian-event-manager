@@ -6,6 +6,7 @@ from pydantic import EmailStr, PostgresDsn, validator
 
 
 class Settings(BaseSettings):
+    ENVIRONMENT: str = "development"
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # JWT settings
