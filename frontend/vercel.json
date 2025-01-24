@@ -24,7 +24,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://dpg-cu9j7b3qt0us73c81in0-a.render.com/api/v1",
+    "VITE_API_URL": "https://indian-event-manager.onrender.com/api/v1",
     "VITE_ENV": "production"
   },
   "github": {
