@@ -15,8 +15,9 @@ check_db_connection() {
     echo "Checking database connection..."
     python3 << END
 import sys
-from sqlalchemy import create_engine
 import os
+import psycopg2
+from urllib.parse import urlparse
 
 try:
     db_url = os.environ.get('DATABASE_URL')
@@ -26,25 +27,37 @@ try:
     
     print(f"Using database URL: {db_url}")
     
-    # Create engine with SSL mode
-    engine = create_engine(
-        db_url,
-        connect_args={'sslmode': 'verify-full'},
-        pool_size=5,
-        max_overflow=10
+    # Parse the URL
+    result = urlparse(db_url)
+    username = result.username
+    password = result.password
+    database = result.path[1:]
+    hostname = result.hostname
+    port = result.port or 5432
+    
+    # Connect with psycopg2
+    conn = psycopg2.connect(
+        dbname=database,
+        user=username,
+        password=password,
+        host=hostname,
+        port=port,
+        sslmode='verify-full'
     )
     
     # Test connection
-    with engine.connect() as connection:
-        result = connection.execute("SELECT 1")
-        print(f"Connection test result: {result.scalar()}")
+    with conn.cursor() as cur:
+        cur.execute('SELECT 1')
+        result = cur.fetchone()
+        print(f"Connection test result: {result[0]}")
     
+    conn.close()
     print("Database connection successful")
     sys.exit(0)
 except Exception as e:
     print(f"Database connection failed with error: {str(e)}")
     print("Environment variables:")
-    for key in ['DATABASE_URL', 'SQLALCHEMY_DATABASE_URI', 'ENVIRONMENT']:
+    for key in ['DATABASE_URL', 'ENVIRONMENT']:
         print(f"{key}: {os.environ.get(key, 'Not set')}")
     sys.exit(1)
 END
