@@ -7,11 +7,11 @@ services:
     startCommand: |
       mkdir -p static/uploads
       uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /
+    healthCheckPath: /health
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
-        value: postgres://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager
+        value: postgres://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager?sslmode=require
       - key: SECRET_KEY
         value: DxvVnmQ0wFdZBwNcmyawYEISCpdos-1PhcRc1wf20PU
       - key: ENVIRONMENT
@@ -20,3 +20,4 @@ services:
         value: '["indian-event-manager.onrender.com", "*.onrender.com"]'
       - key: CORS_ORIGINS
         value: '["https://indian-event-manager.vercel.app", "https://indian-event-manager-6g6m331f4-vics-projects-31447d42.vercel.app", "http://localhost:5173"]'
+    runtime: python3.11

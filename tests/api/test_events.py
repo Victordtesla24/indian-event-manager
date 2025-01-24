@@ -6,6 +6,7 @@ from app import crud
 from app.schemas.event import EventCreate
 from app.schemas.user import UserCreate
 from app.models.user import User
+from app.models.event import Event
 
 
 def test_create_event(
@@ -21,15 +22,17 @@ def test_create_event(
     }
 
     # First create a test user and get their token
-    organizer = crud.user.create(
+    test_organizer = crud.user.create(
         db,
         obj_in=UserCreate(
-            email="test_organizer@example.com",
+            email="test_organizer@example.com",  # type: ignore
             password="test123",
             full_name="Test Organizer",
             is_superuser=True
         )
     )
+    # Help type checker understand the type
+    test_organizer = cast(User, test_organizer)
     login_data = {
         "username": "test_organizer@example.com",
         "password": "test123"
@@ -39,6 +42,8 @@ def test_create_event(
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
+    # Create event with the test organizer
+    data["organizer_id"] = str(test_organizer.id)
     response = client.post(
         "/api/v1/events/",
         headers=headers,
@@ -60,15 +65,16 @@ def test_read_event(
     test_user = crud.user.create(
         db,
         obj_in=UserCreate(
-            email="test_reader@example.com",
+            email="test_reader@example.com",  # type: ignore
             password="test123",
             full_name="Test Reader",
             is_superuser=True
         )
     )
-    test_user = cast(User, test_user)  # Help type checker understand the type
+    # Help type checker understand the type
+    test_user = cast(User, test_user)
 
-    event = crud.event.create_with_organizer(
+    event = cast(Event, crud.event.create_with_organizer(
         db=db,
         obj_in=EventCreate(
             title="Test Event 2",
@@ -79,10 +85,21 @@ def test_read_event(
             event_type="Religious"
         ),
         organizer_id=str(test_user.id)
-    )
+    ))
+
+    # Log in the test user and get their token
+    login_data = {
+        "username": "test_reader@example.com",
+        "password": "test123"
+    }
+    login_response = client.post("/api/v1/auth/login", data=login_data)
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
 
     response = client.get(
-        f"/api/v1/events/{str(event.id)}"
+        f"/api/v1/events/{str(event.id)}",
+        headers=headers
     )
     assert response.status_code == 200
     content = response.json()

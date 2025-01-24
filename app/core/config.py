@@ -29,21 +29,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # Database
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = ""
-    POSTGRES_DB: str = "app"
-    DATABASE_URL: Optional[str] = None
-
-    @validator("DATABASE_URL", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: dict) -> str:
-        if isinstance(v, str):
-            return v
-        user = values.get("POSTGRES_USER", "")
-        password = values.get("POSTGRES_PASSWORD", "")
-        server = values.get("POSTGRES_SERVER", "")
-        db = values.get("POSTGRES_DB", "")
-        return f"postgresql://{user}:{password}@{server}/{db}"
+    DATABASE_URL: str = "postgresql://postgres:@localhost:5432/app"
 
     # Email
     SMTP_TLS: bool = True

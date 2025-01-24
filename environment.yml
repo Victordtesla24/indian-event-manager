@@ -11,7 +11,7 @@ dependencies:
   
   # Database
   - sqlalchemy=2.0.37
-  - psycopg2=2.9.10
+  - psycopg2-binary=2.9.9
   - alembic=1.13.1
   
   # FastAPI
@@ -30,7 +30,7 @@ dependencies:
   - cachetools=5.3.2
   
   # Monitoring
-  - prometheus-client=0.19.0
+  - prometheus_client=0.19.0
   
   # Additional dependencies via pip
   - pip:

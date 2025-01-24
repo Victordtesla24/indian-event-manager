@@ -1,4 +1,5 @@
 from enum import Enum
+import uuid
 from typing import TYPE_CHECKING
 from sqlalchemy import (
     Column, String, DateTime, ForeignKey, Enum as SQLEnum, Boolean
@@ -18,7 +19,12 @@ class EventStatus(str, Enum):
 
 
 class Event(Base):
-    id = Column(String, primary_key=True, index=True)
+    id = Column(
+        String,
+        primary_key=True,
+        index=True,
+        default=lambda: str(uuid.uuid4())
+    )
     title = Column(String, index=True)
     description = Column(String)
     location = Column(String)
