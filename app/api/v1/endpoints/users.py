@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Dict
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic import EmailStr
@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
+from app.models.user import UserRole
 
 router = APIRouter()
 
@@ -42,6 +43,75 @@ def create_user(
         )
     user = crud.user.create(db, obj_in=user_in)
     return user
+
+
+@router.patch("/{user_id}/role", response_model=schemas.User)
+def update_user_role(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: str,
+    role: UserRole = Body(..., embed=True),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Update user role.
+    """
+    user = crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+    
+    user_in = schemas.UserUpdate(role=role)
+    user = crud.user.update(db, db_obj=user, obj_in=user_in)
+    return user
+
+
+@router.patch("/{user_id}/status", response_model=schemas.User)
+def update_user_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: str,
+    is_active: bool = Body(..., embed=True),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Activate or deactivate user.
+    """
+    user = crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+    
+    user_in = schemas.UserUpdate(is_active=is_active)
+    user = crud.user.update(db, db_obj=user, obj_in=user_in)
+    return user
+
+
+@router.get("/stats/overview", response_model=Dict)
+def get_user_stats(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Get user statistics.
+    """
+    total_users = crud.user.count(db)
+    active_users = crud.user.count_active(db)
+    users_by_role = crud.user.count_by_role(db)
+    
+    return {
+        "total_users": total_users,
+        "active_users": active_users,
+        "users_by_role": {
+            "user": users_by_role.get(UserRole.USER, 0),
+            "admin": users_by_role.get(UserRole.ADMIN, 0),
+            "sponsor": users_by_role.get(UserRole.SPONSOR, 0),
+        }
+    }
 
 
 @router.put("/me", response_model=schemas.User)
@@ -94,4 +164,4 @@ def read_user_by_id(
         raise HTTPException(
             status_code=400, detail="The user doesn't have enough privileges"
         )
-    return user 
+    return user

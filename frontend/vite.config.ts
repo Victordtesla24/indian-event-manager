@@ -21,4 +21,6 @@ export default defineConfig({
   css: {
     devSourcemap: true,
   },
+  base: '',
+  publicDir: resolve(__dirname, 'public'),
 })
