@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: indian-event-manager-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: postgres://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager
+      - key: SECRET_KEY
+        value: DxvVnmQ0wFdZBwNcmyawYEISCpdos-1PhcRc1wf20PU
+      - key: ENVIRONMENT
+        value: production
+      - key: ALLOWED_HOSTS
+        value: '["dpg-cu9j7b3qt0us73c81in0-a.render.com"]'
+      - key: CORS_ORIGINS
+        value: '["https://indian-event-manager.vercel.app"]'
+      - key: MAX_UPLOAD_SIZE
+        value: "5242880"
+      - key: UPLOAD_DIR
+        value: static/uploads
