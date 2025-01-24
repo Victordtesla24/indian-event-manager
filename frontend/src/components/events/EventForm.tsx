@@ -1,7 +1,7 @@
 import { useState, type FC, type FormEvent } from 'react';
 import { uploadFile } from '../../utils/fileUpload';
 
-interface Event {
+export interface Event {
   title: string;
   description: string;
   location: string;
@@ -24,7 +24,7 @@ const EventForm: FC<EventFormProps> = ({ onSubmit, initialData }) => {
   const [eventDate, setEventDate] = useState(initialData?.event_date ?? '');
   const [eventType, setEventType] = useState(initialData?.event_type ?? '');
   const [image, setImage] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? '');
+  const [imageUrl] = useState(initialData?.image_url ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

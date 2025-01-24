@@ -2,12 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+import { UserRole } from '../contexts/AuthContext';
+
 interface LoginResponse {
   access_token: string;
   token_type: string;
   user: {
-    username: string;
-    role: string;
+    id: string;
+    email: string;
+    full_name: string;
+    role: UserRole;
+    is_active: boolean;
   };
 }
 
@@ -29,8 +34,11 @@ const Login = () => {
           access_token: 'admin-token',
           token_type: 'bearer',
           user: {
-            username: 'admin',
-            role: 'admin',
+            id: 'admin-1',
+            email: 'admin@example.com',
+            full_name: 'Administrator',
+            role: UserRole.ADMIN,
+            is_active: true
           }
         };
         login(adminData);
