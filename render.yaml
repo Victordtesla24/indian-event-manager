@@ -2,8 +2,10 @@ services:
   - type: web
     name: indian-event-manager-api
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: |
+      pip install -r requirements.txt
+      chmod +x startup.sh
+    startCommand: ./startup.sh
     envVars:
       - key: DATABASE_URL
         value: postgres://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager
