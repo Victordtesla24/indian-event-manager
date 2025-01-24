@@ -1,10 +1,77 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 
 router = APIRouter()
+
+
+@router.get(
+    "/pending",
+    response_model=List[schemas.Event],
+    dependencies=[Depends(deps.get_current_admin_user)]
+)
+def list_pending_events(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+) -> Any:
+    """
+    Retrieve pending events. Admin only.
+    """
+    events = crud.event.get_multi_by_status(
+        db, status=models.EventStatus.PENDING, skip=skip, limit=limit
+    )
+    return events
+
+
+@router.post("/{event_id}/approve", response_model=schemas.Event)
+def approve_event(
+    *,
+    db: Session = Depends(deps.get_db),
+    event_id: str,
+    current_user: models.User = Depends(deps.get_current_admin_user),
+) -> Any:
+    """
+    Approve an event. Admin only.
+    """
+    event = crud.event.get(db=db, id=event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    if event.status != models.EventStatus.PENDING:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Event is already {event.status}"
+        )
+    
+    event_in = schemas.EventUpdate(status=models.EventStatus.APPROVED)
+    event = crud.event.update(db=db, db_obj=event, obj_in=event_in)
+    return event
+
+
+@router.post("/{event_id}/reject", response_model=schemas.Event)
+def reject_event(
+    *,
+    db: Session = Depends(deps.get_db),
+    event_id: str,
+    current_user: models.User = Depends(deps.get_current_admin_user),
+) -> Any:
+    """
+    Reject an event. Admin only.
+    """
+    event = crud.event.get(db=db, id=event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    if event.status != models.EventStatus.PENDING:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Event is already {event.status}"
+        )
+    
+    event_in = schemas.EventUpdate(status=models.EventStatus.REJECTED)
+    event = crud.event.update(db=db, db_obj=event, obj_in=event_in)
+    return event
 
 
 @router.get("/", response_model=List[schemas.Event])
@@ -32,7 +99,7 @@ def create_event(
     Create new event.
     """
     event = crud.event.create_with_organizer(
-        db=db, obj_in=event_in, organizer_id=current_user.id
+        db=db, obj_in=event_in, organizer_id=str(current_user.id)
     )
     return event
 
@@ -51,7 +118,8 @@ def update_event(
     event = crud.event.get(db=db, id=event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    if event.organizer_id != current_user.id and not current_user.is_superuser:
+    if (event.organizer_id != str(current_user.id) and
+            not current_user.is_superuser):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     event = crud.event.update(db=db, db_obj=event, obj_in=event_in)
     return event
@@ -86,7 +154,8 @@ def delete_event(
     event = crud.event.get(db=db, id=event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    if event.organizer_id != current_user.id and not current_user.is_superuser:
+    if (event.organizer_id != str(current_user.id) and 
+            not current_user.is_superuser):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     event = crud.event.remove(db=db, id=event_id)
     return event
@@ -120,4 +189,4 @@ def list_upcoming_events(
     Retrieve upcoming events.
     """
     events = crud.event.get_upcoming_events(db=db, skip=skip, limit=limit)
-    return events 
+    return events

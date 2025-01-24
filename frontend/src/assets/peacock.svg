@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="800px" viewBox="0 0 800 800" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="featherGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00A0B0"/>
+            <stop offset="50%" style="stop-color:#37B6CE"/>
+            <stop offset="100%" style="stop-color:#4ECDC4"/>
+        </linearGradient>
+        <linearGradient id="eyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFD700"/>
+            <stop offset="50%" style="stop-color:#FFA500"/>
+            <stop offset="100%" style="stop-color:#FF8C00"/>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill-rule="evenodd">
+        <!-- Main feather -->
+        <path d="M200,200 C300,100 500,100 600,200 C700,300 700,500 600,600 C500,700 300,700 200,600 C100,500 100,300 200,200 Z" fill="url(#featherGradient)"/>
+        <!-- Eye pattern -->
+        <circle cx="400" cy="400" r="100" fill="url(#eyeGradient)"/>
+        <circle cx="400" cy="400" r="60" fill="#006994"/>
+        <circle cx="400" cy="400" r="30" fill="#000000"/>
+        <!-- Decorative patterns -->
+        <path d="M300,300 C350,250 450,250 500,300 C550,350 550,450 500,500 C450,550 350,550 300,500 C250,450 250,350 300,300 Z" fill="#4ECDC4" opacity="0.5"/>
+        <path d="M350,350 C375,325 425,325 450,350 C475,375 475,425 450,450 C425,475 375,475 350,450 C325,425 325,375 350,350 Z" fill="#37B6CE" opacity="0.5"/>
+    </g>
+</svg>

@@ -1,7 +1,11 @@
 from logging.config import fileConfig
+
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from typing import Dict, Any, cast
+
 from alembic import context
+
 from app.db.base import Base
 from app.core.config import settings
 
@@ -16,6 +20,8 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -45,7 +51,7 @@ def run_migrations_offline() -> None:
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        compare_type=True,
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():
@@ -59,10 +65,11 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url()
+    section = config.get_section(config.config_ini_section)
+    cfg: Dict[str, Any] = cast(Dict[str, Any], section or {})
+    cfg["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
-        configuration,
+        cfg,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
@@ -70,8 +77,7 @@ def run_migrations_online() -> None:
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True,
+            target_metadata=target_metadata
         )
 
         with context.begin_transaction():
@@ -81,4 +87,4 @@ def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    run_migrations_online() 
+    run_migrations_online()

@@ -1,14 +1,14 @@
 from sqlalchemy.orm import Session
 from app import crud, schemas
-from app.core.config import settings
 from app.db import base  # noqa: F401
+from app.models.user import UserRole
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-# make sure all SQL Alchemy models are imported (app.db.base) before initializing DB
-# otherwise, SQL Alchemy might fail to initialize relationships properly
+# Make sure all SQL Alchemy models are imported before initializing DB
+# Otherwise, SQL Alchemy might fail to initialize relationships
 
 
 def init_db(db: Session) -> None:
@@ -17,13 +17,41 @@ def init_db(db: Session) -> None:
     # the tables un-commenting the next line
     # Base.metadata.create_all(bind=engine)
 
-    user = crud.user.get_by_email(db, email=settings.FIRST_SUPERUSER)
+    # Create admin superuser
+    admin = crud.user.get_by_email(db, email="admin@example.com")
+    if not admin:
+        admin_in = schemas.UserCreate(
+            email="admin@example.com",
+            password="admin123",
+            is_superuser=True,
+            full_name="Admin User",
+            role=UserRole.ADMIN
+        )
+        admin = crud.user.create(db, obj_in=admin_in)
+        logger.info("Created admin superuser")
+
+    # Create standard user
+    user = crud.user.get_by_email(db, email="user@example.com")
     if not user:
         user_in = schemas.UserCreate(
-            email=settings.FIRST_SUPERUSER,
-            password=settings.FIRST_SUPERUSER_PASSWORD,
-            is_superuser=True,
-            full_name="Initial Super User",
+            email="user@example.com",
+            password="user123",
+            is_superuser=False,
+            full_name="Standard User",
+            role=UserRole.USER
         )
         user = crud.user.create(db, obj_in=user_in)
-        logger.info("Created first superuser") 
+        logger.info("Created standard user")
+
+    # Create sponsor user
+    sponsor = crud.user.get_by_email(db, email="sponsor@example.com")
+    if not sponsor:
+        sponsor_in = schemas.UserCreate(
+            email="sponsor@example.com",
+            password="sponsor123",
+            is_superuser=False,
+            full_name="Sponsor User",
+            role=UserRole.SPONSOR
+        )
+        sponsor = crud.user.create(db, obj_in=sponsor_in)
+        logger.info("Created sponsor user")

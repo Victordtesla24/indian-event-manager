@@ -45,33 +45,33 @@ git clone https://github.com/Victordtesla24/indian-event-manager.git
 cd indian-event-manager
 ```
 
-2. Create and activate virtual environment:
+2.Create and activate virtual environment:
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 ```
 
-3. Install dependencies:
+3.Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
+4.Set up environment variables:
 
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-5. Run database migrations:
+5.Run database migrations:
 
 ```bash
 python scripts/migrate.py
 ```
 
-6. Start the backend server:
+6.Start the backend server:
 
 ```bash
 python scripts/start.py
@@ -85,20 +85,20 @@ python scripts/start.py
 cd frontend
 ```
 
-2. Install dependencies:
+2.Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Set up environment variables:
+3.Set up environment variables:
 
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-4. Start the development server:
+4.Start the development server:
 
 ```bash
 npm run dev
