@@ -19,13 +19,33 @@ from sqlalchemy import create_engine
 import os
 
 try:
-    engine = create_engine(os.environ['DATABASE_URL'])
-    connection = engine.connect()
-    connection.close()
+    db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        print("DATABASE_URL environment variable is not set")
+        sys.exit(1)
+    
+    print(f"Using database URL: {db_url}")
+    
+    # Create engine with SSL mode
+    engine = create_engine(
+        db_url,
+        connect_args={'sslmode': 'require'},
+        pool_size=5,
+        max_overflow=10
+    )
+    
+    # Test connection
+    with engine.connect() as connection:
+        result = connection.execute("SELECT 1")
+        print(f"Connection test result: {result.scalar()}")
+    
     print("Database connection successful")
     sys.exit(0)
 except Exception as e:
-    print(f"Database connection failed: {e}")
+    print(f"Database connection failed with error: {str(e)}")
+    print("Environment variables:")
+    for key in ['DATABASE_URL', 'SQLALCHEMY_DATABASE_URI', 'ENVIRONMENT']:
+        print(f"{key}: {os.environ.get(key, 'Not set')}")
     sys.exit(1)
 END
 }
