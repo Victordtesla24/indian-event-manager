@@ -35,15 +35,20 @@ try:
     hostname = result.hostname
     port = result.port or 5432
     
-    # Connect with psycopg2
-    conn = psycopg2.connect(
-        dbname=database,
-        user=username,
-        password=password,
-        host=hostname,
-        port=port,
-        sslmode='verify-full'
-    )
+    # Try direct connection first
+    try:
+        conn = psycopg2.connect(
+            dbname=os.environ.get('POSTGRES_DB'),
+            user=os.environ.get('POSTGRES_USER'),
+            password=os.environ.get('POSTGRES_PASSWORD'),
+            host=os.environ.get('POSTGRES_HOST'),
+            port=5432,
+            sslmode='require-cert'
+        )
+    except:
+        print("Direct connection failed, trying URL-based connection...")
+        # Fallback to URL-based connection
+        conn = psycopg2.connect(db_url)
     
     # Test connection
     with conn.cursor() as cur:
