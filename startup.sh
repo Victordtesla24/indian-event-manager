@@ -29,7 +29,7 @@ try:
     # Create engine with SSL mode
     engine = create_engine(
         db_url,
-        connect_args={'sslmode': 'require'},
+        connect_args={'sslmode': 'verify-full'},
         pool_size=5,
         max_overflow=10
     )
