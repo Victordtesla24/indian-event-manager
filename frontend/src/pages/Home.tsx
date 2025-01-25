@@ -1,170 +1,159 @@
-import { Link } from 'react-router-dom';
-import { PLACEHOLDER_IMAGE } from '../utils/constants';
+import Navigation from '../components/layout/Navigation';
+import HeroCarousel from '../components/events/HeroCarousel';
+import EventSection from '../components/events/EventSection';
+
+// Mock data for testing
+const mockNatakEvents = [
+  {
+    id: '1',
+    title: 'Classical Drama',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/natak1'
+  },
+  {
+    id: '2',
+    title: 'Modern Theatre',
+    imageUrl: '/images/banners/peacock1.avif',
+    link: '/events/natak2'
+  },
+  {
+    id: '3',
+    title: 'Folk Performance',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/natak3'
+  },
+  {
+    id: '4',
+    title: 'Street Play',
+    imageUrl: '/images/banners/peacock1.avif',
+    link: '/events/natak4'
+  },
+  {
+    id: '5',
+    title: 'Traditional Drama',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/natak5'
+  }
+];
+
+const mockCinemaEvents = [
+  {
+    id: '6',
+    title: 'Bollywood Premier',
+    imageUrl: '/images/banners/peacock1.avif',
+    link: '/events/cinema1'
+  },
+  {
+    id: '7',
+    title: 'Art House Film',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/cinema2'
+  },
+  {
+    id: '8',
+    title: 'Regional Cinema',
+    imageUrl: '/images/banners/peacock1.avif',
+    link: '/events/cinema3'
+  },
+  {
+    id: '9',
+    title: 'Documentary',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/cinema4'
+  },
+  {
+    id: '10',
+    title: 'Short Film Festival',
+    imageUrl: '/images/banners/peacock1.avif',
+    link: '/events/cinema5'
+  }
+];
+
+const mockMusicalEvents = [
+  {
+    id: '11',
+    title: 'Classical Concert',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/musical1'
+  },
+  {
+    id: '12',
+    title: 'Folk Music Night',
+    imageUrl: '/images/banners/peacock1.avif',
+    link: '/events/musical2'
+  },
+  {
+    id: '13',
+    title: 'Fusion Performance',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/musical3'
+  },
+  {
+    id: '14',
+    title: 'Rock Concert',
+    imageUrl: '/images/banners/peacock1.avif',
+    link: '/events/musical4'
+  },
+  {
+    id: '15',
+    title: 'Jazz Evening',
+    imageUrl: '/images/banners/ganesha1.jpeg',
+    link: '/events/musical5'
+  }
+];
 
 const Home = () => {
-  const featuredEvents = [
-    {
-      id: '1',
-      title: 'Diwali Celebrations 2025',
-      description: 'Join us for the festival of lights with cultural performances, food, and fireworks.',
-      date: '2025-11-12',
-      location: 'Melbourne Convention Centre',
-      imageUrl: PLACEHOLDER_IMAGE,
-    },
-    {
-      id: '2',
-      title: 'Classical Music Night',
-      description: 'An evening of Indian classical music featuring renowned artists.',
-      date: '2025-02-15',
-      location: 'Sydney Opera House',
-      imageUrl: PLACEHOLDER_IMAGE,
-    },
-  ];
-
   return (
-    <div className="min-h-screen">
-      <div className="relative z-10">
-        {/* Hero Section */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="relative container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center hero-container p-8 fade-in">
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-peacock-indigo">
-                Discover Indian Cultural Events
-              </h1>
-              <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
-                Connect with your community through events in Melbourne and Sydney
-              </p>
-              <Link 
-                to="/events"
-                className="btn-primary text-lg px-8 py-4 inline-block"
-              >
-                Explore Events
-              </Link>
-            </div>
-          </div>
-        </section>
+    <div className="min-h-screen bg-white">
+      <Navigation />
+      
+      {/* Hero Carousel */}
+      <div className="mb-4">
+        <HeroCarousel />
+      </div>
 
-        {/* Featured Events Section */}
-        <section className="relative py-16 overflow-hidden">
-          <div className="container mx-auto px-4 relative content-section p-6">
-            <h2 className="text-4xl font-bold text-center text-peacock-blue mb-12">
-              Featured Events
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {featuredEvents.map((event, index) => (
-                <div 
-                  key={event.id}
-                  className="card group relative transparent-container overflow-hidden p-0"
-                >
-                  <div className="aspect-video overflow-hidden relative">
-                    <div className={index === 0 
-                      ? 'absolute inset-0 bg-gradient-to-br opacity-70 from-peacock-lime-light via-peacock-teal-light to-peacock-blue-light'
-                      : 'absolute inset-0 bg-gradient-to-br opacity-70 from-peacock-teal-light via-peacock-blue-light to-peacock-indigo-light'
-                    } />
-                    <img
-                      src={event.imageUrl}
-                      alt={`Event cover for ${event.title}`}
-                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 
-                        group-hover:scale-105 transition-all duration-300 mix-blend-overlay"
-                    />
-                  </div>
-                  <div className="p-6 relative">
-                    <h3 className="text-2xl font-bold mb-3 text-peacock-blue group-hover:text-peacock-indigo transition-colors">
-                      {event.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      {event.description}
-                    </p>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-500">
-                      <span className="flex items-center">
-                        <svg 
-                          className="w-5 h-5 mr-2" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                          role="img"
-                        >
-                          <title>Calendar</title>
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
-                          />
-                        </svg>
-                        {new Date(event.date).toLocaleDateString('en-AU', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </span>
-                      <span className="flex items-center">
-                        <svg 
-                          className="w-5 h-5 mr-2" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                          role="img"
-                        >
-                          <title>Location</title>
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" 
-                          />
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
-                          />
-                        </svg>
-                        {event.location}
-                      </span>
-                    </div>
-                    <Link 
-                      to={`/events/${event.id}`}
-                      className="mt-6 btn-primary w-full inline-block text-center"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center mt-12">
-              <Link 
-                to="/events"
-                className="btn-secondary inline-block"
-              >
-                View All Events
-              </Link>
-            </div>
-          </div>
-        </section>
+      {/* Event Sections */}
+      <div className="space-y-2">
+        <EventSection
+          title="Promoted Natak"
+          events={mockNatakEvents}
+          seeAllLink="/events/natak"
+        />
+        
+        <EventSection
+          title="Promoted Cinema"
+          events={mockCinemaEvents}
+          seeAllLink="/events/cinema"
+        />
+        
+        <EventSection
+          title="Promoted Musicals"
+          events={mockMusicalEvents}
+          seeAllLink="/events/musicals"
+        />
+      </div>
 
-        {/* Call to Action Section */}
-        <section className="relative py-16 overflow-hidden">
-          <div className="container mx-auto px-4 relative">
-            <div className="max-w-2xl mx-auto text-center content-section p-6">
-              <h2 className="text-3xl font-bold text-peacock-indigo mb-4">
-                Join Our Community
-              </h2>
-              <p className="text-xl text-gray-700 mb-8">
-                Create an account to stay updated on upcoming events and connect with the Indian community.
-              </p>
-              <Link 
-                to="/register"
-                className="btn-primary text-lg px-8 py-4 inline-block"
-              >
-                Get Started
-              </Link>
-            </div>
+      {/* Language Selection */}
+      <div className="max-w-[1400px] mx-auto">
+        <div className="py-6 text-center border-t border-gray-200 mt-6 px-4">
+          <h3 className="text-gray-600 text-lg mb-3">भाषा निवडा / Select Language</h3>
+          <div className="space-x-6">
+            <button
+              type="button"
+              className="text-orange-600 hover:text-orange-700 text-lg font-medium"
+              aria-label="Switch to Hindi language"
+            >
+              हिंदी
+            </button>
+            <button
+              type="button"
+              className="text-orange-600 hover:text-orange-700 text-lg font-medium"
+              aria-label="Switch to English language"
+            >
+              English
+            </button>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

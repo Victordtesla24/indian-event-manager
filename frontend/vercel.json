@@ -18,13 +18,13 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "production",
+    "VITE_API_URL": "https://indian-event-manager.onrender.com/api/v1",
     "VITE_ENV": "production",
     "VITE_ENABLE_ANALYTICS": "true"
   },
   "build": {
     "env": {
-      "VITE_API_URL": "production",
+      "VITE_API_URL": "https://indian-event-manager.onrender.com/api/v1",
       "VITE_ENV": "production",
       "VITE_ENABLE_ANALYTICS": "true"
     }
@@ -32,27 +32,5 @@
   "github": {
     "enabled": true,
     "silent": true
-  },
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/assets/(.*)",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" }
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  }
 }

@@ -1,46 +1,45 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'node:path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
-    },
-  },
-  server: {
-    port: 5175,
-    open: true,
-    proxy: {
-      '^/api/v1': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api\/v1/, '/api/v1')
-      }
+      '@': path.resolve(__dirname, './src'),
+      '@assets': path.resolve(__dirname, './src/assets'),
+      '@public': path.resolve(__dirname, './public')
     }
   },
-  css: {
-    devSourcemap: true,
-  },
+  publicDir: 'public',
   base: '/',
-  publicDir: resolve(__dirname, 'public'),
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: true,
+    assetsInlineLimit: 4096,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-        },
-      },
-    },
+        assetFileNames: 'assets/[name].[hash][extname]',
+        chunkFileNames: 'js/[name].[hash].js',
+        entryFileNames: 'js/[name].[hash].js'
+      }
+    }
   },
-})
+  server: {
+    watch: {
+      usePolling: true
+    },
+    host: true,
+    port: 5174,
+    fs: {
+      strict: false,
+      allow: ['..']
+    }
+  },
+  preview: {
+    port: 5174
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'framer-motion']
+  }
+});
