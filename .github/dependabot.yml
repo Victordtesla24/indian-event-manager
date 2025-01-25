@@ -1,66 +1,31 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/frontend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Australia/Melbourne"
-    versioning-strategy: "increase"
-    groups:
-      dependencies:
-        patterns:
-          - "*"
-    commit-message:
-      prefix: "⬆️ "
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "frontend"
-    reviewers:
-      - "project-maintainers"
-    open-pull-requests-limit: 10
-
+  # Python dependencies
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Australia/Melbourne"
-    versioning-strategy: "increase"
-    groups:
-      dependencies:
-        patterns:
-          - "*"
-    commit-message:
-      prefix: "⬆️ "
-      include: "scope"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
-      - "backend"
-    reviewers:
-      - "project-maintainers"
-    open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "sqlalchemy"
-        versions: ["2.1.0"]  # Skip major version updates
-      - dependency-name: "pydantic"
-        versions: ["3.0.0"]  # Skip major version updates
+      - "python"
 
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "javascript"
+
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Australia/Melbourne"
-    commit-message:
-      prefix: "⬆️ "
-      include: "scope"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "github-actions"
-    reviewers:
-      - "project-maintainers"

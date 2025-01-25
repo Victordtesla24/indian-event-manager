@@ -1,0 +1,9 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#F3F4F6"/>
+  <path d="M185 130H215C220.523 130 225 134.477 225 140V160C225 165.523 220.523 170 215 170H185C179.477 170 175 165.523 175 160V140C175 134.477 179.477 130 185 130Z" fill="#9CA3AF"/>
+  <path d="M190 140C190 137.239 192.239 135 195 135H205C207.761 135 210 137.239 210 140V150C210 152.761 207.761 155 205 155H195C192.239 155 190 152.761 190 150V140Z" fill="#F3F4F6"/>
+  <path d="M180 160C180 157.239 182.239 155 185 155H195C197.761 155 200 157.239 200 160V165C200 167.761 197.761 170 195 170H185C182.239 170 180 167.761 180 165V160Z" fill="#F3F4F6"/>
+  <path d="M205 155H215C217.761 155 220 157.239 220 160V165C220 167.761 217.761 170 215 170H205C202.239 170 200 167.761 200 165V160C200 157.239 202.239 155 205 155Z" fill="#F3F4F6"/>
+  <text x="200" y="200" text-anchor="middle" font-family="system-ui" font-size="14" fill="#6B7280">Sponsor logo not available</text>
+  <text x="200" y="220" text-anchor="middle" font-family="system-ui" font-size="12" fill="#9CA3AF">Please check back later</text>
+</svg>

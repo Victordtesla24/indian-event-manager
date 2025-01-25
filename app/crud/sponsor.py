@@ -1,4 +1,5 @@
-from typing import List, Optional, Dict, Any
+from typing import List
+from datetime import datetime
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.models.sponsor import Sponsor
@@ -6,71 +7,55 @@ from app.schemas.sponsor import SponsorCreate, SponsorUpdate
 
 
 class CRUDSponsor(CRUDBase[Sponsor, SponsorCreate, SponsorUpdate]):
-    def get_by_user_id(
-        self, db: Session, *, user_id: str
-    ) -> Optional[Sponsor]:
-        return db.query(self.model).filter(Sponsor.user_id == user_id).first()
+    def count(self, db: Session) -> int:
+        """Get total count of sponsors"""
+        return db.query(Sponsor).count()
 
-    def get_multi_by_ids(
+    def count_by_date_range(
         self,
         db: Session,
-        *,
-        sponsor_ids: List[str],
+        start_date: datetime,
+        end_date: datetime
+    ) -> int:
+        """Get count of sponsors created within a date range"""
+        return (
+            db.query(Sponsor)
+            .filter(Sponsor.created_at >= start_date)
+            .filter(Sponsor.created_at <= end_date)
+            .count()
+        )
+
+    def get_active_sponsors(
+        self,
+        db: Session,
         skip: int = 0,
         limit: int = 100
     ) -> List[Sponsor]:
+        """Get active sponsors"""
         return (
-            db.query(self.model)
-            .filter(Sponsor.id.in_(sponsor_ids))
+            db.query(Sponsor)
+            .filter(Sponsor.is_active.is_(True))
             .offset(skip)
             .limit(limit)
             .all()
         )
 
-    def update_analytics(
+    def get_sponsors_by_event(
         self,
         db: Session,
-        *,
-        db_obj: Sponsor,
-        analytics_data: Dict[str, Any]
-    ) -> Sponsor:
-        current_analytics = db_obj.analytics or {}
-        current_analytics.update(analytics_data)
-        
-        db_obj.analytics = current_analytics
-        db_obj.total_views = analytics_data.get(
-            'total_views', db_obj.total_views
+        event_id: str,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Sponsor]:
+        """Get sponsors for a specific event"""
+        return (
+            db.query(Sponsor)
+            .join(Sponsor.events)
+            .filter(Sponsor.events.any(id=event_id))
+            .offset(skip)
+            .limit(limit)
+            .all()
         )
-        db_obj.total_clicks = analytics_data.get(
-            'total_clicks', db_obj.total_clicks
-        )
-        
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
-
-    def increment_views(
-        self, db: Session, *, sponsor_id: str
-    ) -> Optional[Sponsor]:
-        sponsor = self.get(db, id=sponsor_id)
-        if sponsor:
-            sponsor.total_views += 1
-            db.add(sponsor)
-            db.commit()
-            db.refresh(sponsor)
-        return sponsor
-
-    def increment_clicks(
-        self, db: Session, *, sponsor_id: str
-    ) -> Optional[Sponsor]:
-        sponsor = self.get(db, id=sponsor_id)
-        if sponsor:
-            sponsor.total_clicks += 1
-            db.add(sponsor)
-            db.commit()
-            db.refresh(sponsor)
-        return sponsor
 
 
 sponsor = CRUDSponsor(Sponsor)

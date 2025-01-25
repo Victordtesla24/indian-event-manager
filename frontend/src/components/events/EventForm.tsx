@@ -42,7 +42,7 @@ const EventForm: FC<EventFormProps> = ({ onSubmit, initialData }) => {
     try {
       let finalImageUrl = imageUrl;
       if (image) {
-        const uploadResult = await uploadFile(image);
+        const uploadResult = await uploadFile(image, 'events');
         if (uploadResult.error) {
           throw new Error(uploadResult.error);
         }

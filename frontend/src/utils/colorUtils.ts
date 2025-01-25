@@ -1,100 +1,58 @@
-// Function to get average color from an image
-export const getAverageColor = (imgElement: HTMLImageElement): Promise<string> => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    
-    if (!context) {
-      resolve('#000000');
-      return;
-    }
-
-    const width = 50; // Small sample size for performance
-    const height = 50;
-    
-    canvas.width = width;
-    canvas.height = height;
-    
-    // Draw image and get color data
-    context.drawImage(imgElement, 0, 0, width, height);
-    const imageData = context.getImageData(0, 0, width, height).data;
-    
-    let red = 0;
-    let green = 0;
-    let blue = 0;
-    const total = width * height;
-    
-    // Calculate average RGB values
-    for (let i = 0; i < imageData.length; i += 4) {
-      red += imageData[i];
-      green += imageData[i + 1];
-      blue += imageData[i + 2];
-    }
-    
-    const r = Math.round(red / total);
-    const g = Math.round(green / total);
-    const b = Math.round(blue / total);
-    
-    resolve(`rgb(${r}, ${g}, ${b})`);
-  });
+export const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: Number.parseInt(result[1], 16),
+        g: Number.parseInt(result[2], 16),
+        b: Number.parseInt(result[3], 16),
+      }
+    : null;
 };
 
-// Function to generate a color palette from a base color
-export const generatePalette = (baseColor: string) => {
-  // Convert rgb string to values
-  const rgb = baseColor.match(/\d+/g)?.map(Number) || [0, 0, 0];
-  const [r, g, b] = rgb;
-
-  // Convert to HSL for better color manipulation
-  const hsl = rgbToHsl(r, g, b);
-  const [h, s, l] = hsl;
-
-  return {
-    primary: baseColor,
-    light: `hsl(${h}, ${s * 100}%, ${Math.min(l * 1.2, 1) * 100}%)`,
-    dark: `hsl(${h}, ${s * 100}%, ${l * 0.8 * 100}%)`,
-    accent: `hsl(${(h + 180) % 360}, ${s * 100}%, ${l * 100}%)`,
-  };
+export const rgbToHex = (r: number, g: number, b: number): string => {
+  return `#${[r, g, b].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? `0${hex}` : hex;
+  }).join('')}`;
 };
 
-// Helper function to convert RGB to HSL
-const rgbToHsl = (red: number, green: number, blue: number): [number, number, number] => {
-  const r = red / 255;
-  const g = green / 255;
-  const b = blue / 255;
+export const getContrastColor = (hex: string): string => {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return '#000000';
 
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h = 0;
-  let s = 0;
-  const l = (max + min) / 2;
+  // Calculate relative luminance
+  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
 
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  // Return black for bright colors, white for dark ones
+  return luminance > 0.5 ? '#000000' : '#FFFFFF';
+};
 
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      case b:
-        h = (r - g) / d + 4;
-        break;
-    }
+export const adjustBrightness = (hex: string, percent: number): string => {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return hex;
 
-    h /= 6;
+  const { r, g, b } = rgb;
+  const amount = Math.floor((percent / 100) * 255);
+
+  const newR = Math.max(0, Math.min(255, r + amount));
+  const newG = Math.max(0, Math.min(255, g + amount));
+  const newB = Math.max(0, Math.min(255, b + amount));
+
+  return rgbToHex(newR, newG, newB);
+};
+
+export const generateGradient = (startColor: string, endColor: string, steps: number): string[] => {
+  const start = hexToRgb(startColor);
+  const end = hexToRgb(endColor);
+  if (!start || !end) return [startColor, endColor];
+
+  const gradient: string[] = [];
+  for (let i = 0; i < steps; i++) {
+    const r = Math.round(start.r + (end.r - start.r) * (i / (steps - 1)));
+    const g = Math.round(start.g + (end.g - start.g) * (i / (steps - 1)));
+    const b = Math.round(start.b + (end.b - start.b) * (i / (steps - 1)));
+    gradient.push(rgbToHex(r, g, b));
   }
 
-  return [h * 360, s, l];
-};
-
-// Create CSS variables for dynamic colors
-export const applyColorPalette = (palette: ReturnType<typeof generatePalette>) => {
-  const root = document.documentElement;
-  for (const [key, value] of Object.entries(palette)) {
-    root.style.setProperty(`--color-${key}`, value);
-  }
+  return gradient;
 };

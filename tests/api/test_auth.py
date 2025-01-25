@@ -38,8 +38,16 @@ def test_login_user(client: TestClient, db: Session) -> None:
     data = {
         "username": email,
         "password": password,
+        "grant_type": "password"
     }
-    response = client.post("/api/v1/auth/login", data=data)
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    response = client.post(
+        "/api/v1/auth/login",
+        data=data,
+        headers=headers
+    )
     assert response.status_code == 200
     tokens = response.json()
     assert "access_token" in tokens

@@ -1,160 +1,105 @@
-import Navigation from '../components/layout/Navigation';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import HeroCarousel from '../components/events/HeroCarousel';
-import EventSection from '../components/events/EventSection';
 
-// Mock data for testing
-const mockNatakEvents = [
-  {
-    id: '1',
-    title: 'Classical Drama',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/natak1'
-  },
-  {
-    id: '2',
-    title: 'Modern Theatre',
-    imageUrl: '/images/banners/peacock1.avif',
-    link: '/events/natak2'
-  },
-  {
-    id: '3',
-    title: 'Folk Performance',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/natak3'
-  },
-  {
-    id: '4',
-    title: 'Street Play',
-    imageUrl: '/images/banners/peacock1.avif',
-    link: '/events/natak4'
-  },
-  {
-    id: '5',
-    title: 'Traditional Drama',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/natak5'
-  }
-];
-
-const mockCinemaEvents = [
-  {
-    id: '6',
-    title: 'Bollywood Premier',
-    imageUrl: '/images/banners/peacock1.avif',
-    link: '/events/cinema1'
-  },
-  {
-    id: '7',
-    title: 'Art House Film',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/cinema2'
-  },
-  {
-    id: '8',
-    title: 'Regional Cinema',
-    imageUrl: '/images/banners/peacock1.avif',
-    link: '/events/cinema3'
-  },
-  {
-    id: '9',
-    title: 'Documentary',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/cinema4'
-  },
-  {
-    id: '10',
-    title: 'Short Film Festival',
-    imageUrl: '/images/banners/peacock1.avif',
-    link: '/events/cinema5'
-  }
-];
-
-const mockMusicalEvents = [
-  {
-    id: '11',
-    title: 'Classical Concert',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/musical1'
-  },
-  {
-    id: '12',
-    title: 'Folk Music Night',
-    imageUrl: '/images/banners/peacock1.avif',
-    link: '/events/musical2'
-  },
-  {
-    id: '13',
-    title: 'Fusion Performance',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/musical3'
-  },
-  {
-    id: '14',
-    title: 'Rock Concert',
-    imageUrl: '/images/banners/peacock1.avif',
-    link: '/events/musical4'
-  },
-  {
-    id: '15',
-    title: 'Jazz Evening',
-    imageUrl: '/images/banners/ganesha1.jpeg',
-    link: '/events/musical5'
-  }
-];
+const NavLinks = () => (
+  <>
+    <Link to="/all" className="text-gray-700 hover:text-red-600 transition-colors duration-200 font-medium">All</Link>
+    <Link to="/natak" className="text-gray-700 hover:text-red-600 transition-colors duration-200 font-medium">Natak</Link>
+    <Link to="/cinema" className="text-gray-700 hover:text-red-600 transition-colors duration-200 font-medium">Cinema</Link>
+    <Link to="/musicals" className="text-gray-700 hover:text-red-600 transition-colors duration-200 font-medium">Musicals</Link>
+    <Link to="/events" className="text-gray-700 hover:text-red-600 transition-colors duration-200 font-medium">Events</Link>
+    <Link to="/fun" className="text-gray-700 hover:text-red-600 transition-colors duration-200 font-medium">Fun</Link>
+    <Link to="/folk" className="text-gray-700 hover:text-red-600 transition-colors duration-200 font-medium">Folk</Link>
+  </>
+);
 
 const Home = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
-      
-      {/* Hero Carousel */}
-      <div className="mb-4">
-        <HeroCarousel />
-      </div>
-
-      {/* Event Sections */}
-      <div className="space-y-2">
-        <EventSection
-          title="Promoted Natak"
-          events={mockNatakEvents}
-          seeAllLink="/events/natak"
-        />
-        
-        <EventSection
-          title="Promoted Cinema"
-          events={mockCinemaEvents}
-          seeAllLink="/events/cinema"
-        />
-        
-        <EventSection
-          title="Promoted Musicals"
-          events={mockMusicalEvents}
-          seeAllLink="/events/musicals"
-        />
-      </div>
-
-      {/* Language Selection */}
-      <div className="max-w-[1400px] mx-auto">
-        <div className="py-6 text-center border-t border-gray-200 mt-6 px-4">
-          <h3 className="text-gray-600 text-lg mb-3">भाषा निवडा / Select Language</h3>
-          <div className="space-x-6">
-            <button
-              type="button"
-              className="text-orange-600 hover:text-orange-700 text-lg font-medium"
-              aria-label="Switch to Hindi language"
+      <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="text-xl font-bold text-red-600">
+              Indian Event Manager
+            </Link>
+            <nav className="hidden md:flex space-x-8">
+              <NavLinks />
+            </nav>
+            <div className="hidden md:flex items-center space-x-4">
+              <button type="button" className="text-gray-700 hover:text-red-600">मराठी</button>
+              <button type="button" className="text-gray-700 hover:text-red-600">English</button>
+            </div>
+            <button 
+              type="button" 
+              className="md:hidden text-gray-700"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              हिंदी
-            </button>
-            <button
-              type="button"
-              className="text-orange-600 hover:text-orange-700 text-lg font-medium"
-              aria-label="Switch to English language"
-            >
-              English
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Menu">
+                <title>Menu</title>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
           </div>
+          {/* Mobile menu */}
+          <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out absolute top-full left-0 right-0 bg-white shadow-lg ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="py-6">
+              <nav className="flex flex-col space-y-4 px-6">
+                <NavLinks />
+              </nav>
+              <div className="flex justify-center space-x-6 mt-6 pt-4 border-t border-gray-100">
+                <button type="button" className="text-gray-700 hover:text-red-600 font-medium">मराठी</button>
+                <button type="button" className="text-gray-700 hover:text-red-600 font-medium">English</button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
+
+      <main className="pt-16">
+        <HeroCarousel />
+        
+        <div className="w-full bg-white py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <section className="mb-16 md:mb-24">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold">Promoted Natak</h2>
+                <Link to="/natak" className="text-red-600 hover:text-red-700 uppercase text-sm font-semibold tracking-wide">SEE ALL</Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                    <img 
+                      src="/images/events/gettyimages-1735021730-612x612.jpg"
+                      alt="Event"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="mb-16 md:mb-24">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold">Promoted Events</h2>
+                <Link to="/events" className="text-red-600 hover:text-red-700 uppercase text-sm font-semibold tracking-wide">SEE ALL</Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                    <img 
+                      src="/images/events/gettyimages-1702362815-612x612.jpg"
+                      alt="Event"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

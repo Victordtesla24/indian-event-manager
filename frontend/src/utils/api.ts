@@ -1,69 +1,107 @@
-const API_URL = import.meta.env.VITE_API_URL;
+import axios from 'axios';
 
 export const API_ROUTES = {
-  AUTH: {
-    LOGIN: `${API_URL}/auth/login`,
-    REGISTER: `${API_URL}/auth/register`,
+  auth: {
+    login: '/auth/login',
+    register: '/auth/register',
+    refresh: '/auth/refresh'
   },
-  ADMIN: {
-    ANALYTICS: `${API_URL}/admin/analytics`,
-    USERS: `${API_URL}/admin/users`,
-    EVENTS: `${API_URL}/admin/events`,
-    MARKETING: `${API_URL}/marketing`,
+  events: {
+    list: '/events',
+    create: '/events',
+    update: (id: string) => `/events/${id}`,
+    delete: (id: string) => `/events/${id}`,
+    approve: (id: string) => `/events/${id}/approve`
   },
-  EVENTS: {
-    LIST: `${API_URL}/events`,
-    CREATE: `${API_URL}/events`,
-    DETAILS: (id: string) => `${API_URL}/events/${id}`,
+  users: {
+    list: '/users',
+    create: '/users',
+    update: (id: string) => `/users/${id}`,
+    delete: (id: string) => `/users/${id}`
   },
-  SPONSORS: {
-    LIST: `${API_URL}/sponsors`,
-    CREATE: `${API_URL}/sponsors`,
-    DETAILS: (id: string) => `${API_URL}/sponsors/${id}`,
+  admin: {
+    analytics: '/admin/analytics',
+    dashboard: '/admin/dashboard',
+    settings: '/admin/settings'
   },
+  uploads: '/uploads'
 };
 
-export const fetchApi = async (
-  url: string,
-  options: RequestInit = {}
-): Promise<any> => {
+export const fetchApi = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token');
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers
   };
 
-  console.log('Making request to:', url);
-  console.log('With headers:', headers);
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+  const response = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
+    ...options,
+    headers
+  });
 
-    const responseText = await response.text();
-    console.log('Response status:', response.status);
-    console.log('Response text:', responseText);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 
-    if (!response.ok) {
+  return response.json();
+};
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add a request interceptor
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add a response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If the error status is 401 and there is no originalRequest._retry flag,
+    // it means the token has expired and we need to refresh it
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
       try {
-        const errorJson = JSON.parse(responseText);
-        throw new Error(errorJson.detail || errorJson.message || 'API request failed');
-      } catch {
-        throw new Error(responseText || 'API request failed');
+        const refreshToken = localStorage.getItem('refreshToken');
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+          refreshToken,
+        });
+
+        const { token } = response.data;
+        localStorage.setItem('token', token);
+
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      } catch (error) {
+        // If refresh token fails, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+        return Promise.reject(error);
       }
     }
 
-    try {
-      return JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse response as JSON:', e);
-      throw new Error('Invalid JSON response from server');
-    }
-  } catch (e) {
-    console.error('API request failed:', e);
-    throw e;
+    return Promise.reject(error);
   }
-};
+);
+
+export default api;

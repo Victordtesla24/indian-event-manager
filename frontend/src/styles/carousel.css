@@ -1,140 +1,42 @@
-/* Slick carousel custom styles */
 .slick-dots {
-  bottom: 20px !important;
+  bottom: 40px !important;
   z-index: 10;
-  display: flex !important;
-  justify-content: center;
-  gap: 8px;
-  padding: 0;
 }
 
 .slick-dots li {
-  margin: 0 !important;
-  width: auto !important;
-  height: auto !important;
+  margin: 0 6px !important;
 }
 
-.carousel-dot {
-  width: 10px !important;
-  height: 10px !important;
+.slick-dots li button {
+  width: 12px !important;
+  height: 12px !important;
   padding: 0 !important;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.5);
-  border: none;
-  transition: all 0.2s ease;
-  cursor: pointer;
 }
 
-.carousel-dot.active,
-.carousel-dot:hover {
-  background-color: white;
-  transform: scale(1.2);
+.slick-dots li button:before {
+  content: '' !important;
+  width: 12px !important;
+  height: 12px !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-radius: 50% !important;
+  opacity: 1 !important;
+  transition: all 0.3s ease !important;
 }
 
-/* Book Now button */
-.book-now-button {
-  display: inline-block;
-  padding: 12px 32px;
-  background-color: #f4511e;
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-  text-transform: none;
-  letter-spacing: normal;
+.slick-dots li.slick-active button:before {
+  background: #fff !important;
+  opacity: 1 !important;
+  transform: scale(1.2) !important;
 }
 
-.book-now-button:hover {
-  background-color: #e64a19;
-  transform: translateY(-1px);
+.slick-slider {
+  margin-bottom: 0 !important;
 }
 
-/* Carousel slide transitions */
 .slick-slide {
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.5s ease !important;
 }
 
-.slick-slide.slick-active {
-  opacity: 1;
-}
-
-/* Carousel content */
-.carousel-content {
-  position: absolute;
-  bottom: 48px;
-  right: 32px;
-  text-align: right;
-  z-index: 1;
-}
-
-.carousel-content h3 {
-  font-size: 32px;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  margin-bottom: 24px;
-}
-
-/* Carousel overlay */
-.carousel-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60%;
-  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-  pointer-events: none;
-}
-
-/* Event card hover effect */
-.event-card-overlay {
-  opacity: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(2px);
-  transition: opacity 0.2s ease;
-}
-
-.event-card:hover .event-card-overlay {
-  opacity: 1;
-}
-
-/* Section titles */
-.section-title {
-  font-size: 20px;
-  font-weight: 500;
-  color: #1a1a1a;
-}
-
-.see-all-link {
-  font-size: 16px;
-  font-weight: 600;
-  color: #f4511e;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: color 0.2s ease;
-}
-
-.see-all-link:hover {
-  color: #e64a19;
-}
-
-/* Mobile optimizations */
-@media (max-width: 640px) {
-  .carousel-content h3 {
-    font-size: 24px;
-    margin-bottom: 16px;
-  }
-
-  .book-now-button {
-    padding: 10px 24px;
-    font-size: 14px;
-  }
-
-  .carousel-dot {
-    width: 8px !important;
-    height: 8px !important;
-  }
+.slick-slide > div {
+  line-height: 0;
 }

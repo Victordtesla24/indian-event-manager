@@ -1,0 +1,7 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#F3F4F6"/>
+  <path d="M200 130C188.954 130 180 138.954 180 150C180 161.046 188.954 170 200 170C211.046 170 220 161.046 220 150C220 138.954 211.046 130 200 130ZM200 165C191.729 165 185 158.271 185 150C185 141.729 191.729 135 200 135C208.271 135 215 141.729 215 150C215 158.271 208.271 165 200 165Z" fill="#9CA3AF"/>
+  <path d="M190 145C190 142.239 192.239 140 195 140H205C207.761 140 210 142.239 210 145V155C210 157.761 207.761 160 205 160H195C192.239 160 190 157.761 190 155V145Z" fill="#9CA3AF"/>
+  <text x="200" y="200" text-anchor="middle" font-family="system-ui" font-size="14" fill="#6B7280">Event image not available</text>
+  <text x="200" y="220" text-anchor="middle" font-family="system-ui" font-size="12" fill="#9CA3AF">Please check back later</text>
+</svg>

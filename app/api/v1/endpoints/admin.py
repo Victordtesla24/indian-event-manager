@@ -1,246 +1,159 @@
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from typing import Any
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import crud, models, schemas
+from app import crud, models
 from app.api import deps
-from app.models.user import UserRole, AdminPermission, AdminLevel
 from datetime import datetime, timedelta
-from starlette.datastructures import Address
+
 
 router = APIRouter()
 
 
-def log_admin_action(
-    db: Session,
-    admin: models.User,
-    action: str,
-    entity_type: str,
-    entity_id: str = None,
-    details: dict = None,
-    request: Request = None
-) -> None:
-    """Log admin actions for audit purposes."""
-    ip_address: Optional[str] = None
-    if request and isinstance(request.client, Address):
-        ip_address = request.client.host
-    
-    audit_log = schemas.AdminAuditLogCreate(
-        admin_id=str(admin.id),
-        action=action,
-        entity_type=entity_type,
-        entity_id=entity_id,
-        details=details,
-        ip_address=ip_address
-    )
-    crud.admin.create(db, obj_in=audit_log)
-
-
-def check_admin_permission(
-    user: models.User,
-    permission: AdminPermission
-) -> None:
-    """Check if admin has required permission."""
-    if not user.has_permission(permission):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Admin lacks required permission: {permission}"
-        )
-
-
-@router.get("/analytics", response_model=schemas.AdminStats)
-def get_admin_analytics(
+@router.get("/metrics")
+async def get_metrics(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_admin_user),
 ) -> Any:
-    """Get analytics data for admin dashboard."""
+    """
+    Get admin dashboard metrics
+    """
     try:
-        check_admin_permission(current_user, AdminPermission.VIEW_ANALYTICS)
-
-        # User statistics
-        total_users = crud.user.count(db)
-        active_users = crud.user.count_active(db)
-        users_by_role = crud.user.count_by_role(db)
-
-        # Event statistics
+        # Get total events count and change
         total_events = crud.event.count(db)
-        pending_events = crud.event.count_by_status(db, status="pending")
-        active_sponsors = crud.user.count_by_role(db).get(UserRole.SPONSOR, 0)
+        events_last_week = crud.event.count_by_date_range(
+            db,
+            start_date=datetime.now() - timedelta(days=14),
+            end_date=datetime.now() - timedelta(days=7)
+        )
+        events_this_week = crud.event.count_by_date_range(
+            db,
+            start_date=datetime.now() - timedelta(days=7),
+            end_date=datetime.now()
+        )
+        events_change = calculate_percentage_change(
+            events_last_week,
+            events_this_week
+        )
 
-        # Recent events
-        recent_events = crud.event.get_recent(db, limit=5)
-        recent_events_data = [
+        # Get active users count and change
+        active_users = crud.user.count_active(db)
+        users_last_week = crud.user.count_active_by_date_range(
+            db,
+            start_date=datetime.now() - timedelta(days=14),
+            end_date=datetime.now() - timedelta(days=7)
+        )
+        users_this_week = crud.user.count_active_by_date_range(
+            db,
+            start_date=datetime.now() - timedelta(days=7),
+            end_date=datetime.now()
+        )
+        users_change = calculate_percentage_change(
+            users_last_week,
+            users_this_week
+        )
+
+        # Get sponsors count and change
+        total_sponsors = crud.sponsor.count(db)
+        sponsors_last_week = crud.sponsor.count_by_date_range(
+            db,
+            start_date=datetime.now() - timedelta(days=14),
+            end_date=datetime.now() - timedelta(days=7)
+        )
+        sponsors_this_week = crud.sponsor.count_by_date_range(
+            db,
+            start_date=datetime.now() - timedelta(days=7),
+            end_date=datetime.now()
+        )
+        sponsors_change = calculate_percentage_change(
+            sponsors_last_week,
+            sponsors_this_week
+        )
+
+        # Calculate engagement rate (events per active user)
+        engagement_rate = round(
+            total_events / active_users if active_users > 0 else 0,
+            2
+        )
+        engagement_last_week = round(
+            events_last_week / users_last_week if users_last_week > 0 else 0,
+            2
+        )
+        engagement_this_week = round(
+            events_this_week / users_this_week if users_this_week > 0 else 0,
+            2
+        )
+        engagement_change = calculate_percentage_change(
+            engagement_last_week,
+            engagement_this_week
+        )
+
+        return [
             {
-                "id": str(event.id),
-                "title": event.title,
-                "date": event.event_date.isoformat(),
-                "attendees": len(getattr(event, 'attendees', []))
+                "value": total_events,
+                "change": events_change
+            },
+            {
+                "value": active_users,
+                "change": users_change
+            },
+            {
+                "value": total_sponsors,
+                "change": sponsors_change
+            },
+            {
+                "value": engagement_rate,
+                "change": engagement_change
             }
-            for event in recent_events
         ]
 
-        response_data = {
-            "total_users": total_users,
-            "active_users": active_users,
-            "total_events": total_events,
-            "pending_events": pending_events,
-            "active_sponsors": active_sponsors,
-            "users_by_role": {
-                "user": users_by_role.get(UserRole.USER, 0),
-                "admin": users_by_role.get(UserRole.ADMIN, 0),
-                "sponsor": users_by_role.get(UserRole.SPONSOR, 0),
-            },
-            "recent_events": recent_events_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching metrics: {str(e)}"
+        )
+
+
+@router.get("/trends")
+async def get_trends(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_admin_user),
+) -> Any:
+    """
+    Get event trends data for the dashboard charts
+    """
+    try:
+        # Get daily event counts for the last 7 days
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=7)
+        daily_counts = crud.event.get_daily_counts(db, start_date, end_date)
+
+        # Format data for the chart
+        labels = []
+        values = []
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = current_date.strftime('%a')  # Day name (Mon, Tue, etc.)
+            count = daily_counts.get(current_date.date(), 0)
+            
+            labels.append(date_str)
+            values.append(count)
+            
+            current_date += timedelta(days=1)
+
+        return {
+            "labels": labels,
+            "values": values
         }
 
-        return JSONResponse(content=response_data)
     except Exception as e:
-        return JSONResponse(
+        raise HTTPException(
             status_code=500,
-            content={"error": str(e)}
+            detail=f"Error fetching trends: {str(e)}"
         )
 
 
-@router.get("/audit-logs", response_model=List[schemas.AdminAuditLog])
-def get_audit_logs(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_admin_user),
-    skip: int = 0,
-    limit: int = 100,
-) -> Any:
-    """Get admin audit logs."""
-    check_admin_permission(current_user, AdminPermission.VIEW_ANALYTICS)
-    return crud.admin.get_audit_logs(db, skip=skip, limit=limit)
-
-
-@router.get("/users/activity", response_model=schemas.AdminUserActivity)
-def get_user_activity(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_admin_user),
-) -> Any:
-    """Get user activity statistics."""
-    check_admin_permission(current_user, AdminPermission.VIEW_ANALYTICS)
-
-    today_start = datetime.now().replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    active_today = crud.user.count_active_since(db, since=today_start)
-    active_this_week = crud.user.count_active_since(
-        db,
-        since=datetime.now() - timedelta(days=7)
-    )
-    active_this_month = crud.user.count_active_since(
-        db,
-        since=datetime.now() - timedelta(days=30)
-    )
-    
-    return schemas.AdminUserActivity(
-        active_today=active_today,
-        active_this_week=active_this_week,
-        active_this_month=active_this_month,
-        users_by_login_count=crud.user.get_users_by_login_count(db),
-        top_active_users=crud.user.get_most_active_users(db, limit=10)
-    )
-
-
-@router.post("/users/{user_id}/permissions")
-def update_user_permissions(
-    user_id: str,
-    permissions: List[AdminPermission],
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_admin_user),
-    request: Request = None,
-) -> Dict[str, Any]:
-    """Update admin user permissions."""
-    check_admin_permission(current_user, AdminPermission.MANAGE_USERS)
-    
-    target_user = crud.user.get(db, id=user_id)
-    if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    if target_user.is_super_admin and not current_user.is_super_admin:
-        raise HTTPException(
-            status_code=403,
-            detail="Only super admins can modify super admin permissions"
-        )
-    
-    update_data = {"permissions": [p.value for p in permissions]}
-    crud.user.update(db, db_obj=target_user, obj_in=update_data)
-    
-    log_admin_action(
-        db,
-        current_user,
-        "update_permissions",
-        "user",
-        user_id,
-        {"permissions": [p.value for p in permissions]},
-        request
-    )
-    
-    return {"message": "Permissions updated successfully"}
-
-
-@router.post("/users/{user_id}/admin-level")
-def update_admin_level(
-    user_id: str,
-    admin_level: AdminLevel,
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_admin_user),
-    request: Request = None,
-) -> Dict[str, Any]:
-    """Update admin user level."""
-    if not current_user.is_super_admin:
-        raise HTTPException(
-            status_code=403,
-            detail="Only super admins can modify admin levels"
-        )
-    
-    target_user = crud.user.get(db, id=user_id)
-    if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    update_data = {"admin_level": admin_level.value}
-    crud.user.update(db, db_obj=target_user, obj_in=update_data)
-    
-    log_admin_action(
-        db,
-        current_user,
-        "update_admin_level",
-        "user",
-        user_id,
-        {"admin_level": admin_level.value},
-        request
-    )
-    
-    return {"message": "Admin level updated successfully"}
-
-
-@router.get("/events/stats", response_model=Dict[str, Any])
-def get_event_statistics(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_admin_user),
-) -> Any:
-    """Get detailed event statistics."""
-    check_admin_permission(current_user, AdminPermission.VIEW_ANALYTICS)
-    
-    return {
-        "eventsByStatus": crud.event.count_by_status_all(db),
-        "eventsByType": crud.event.count_by_type(db),
-        "eventsByCity": crud.event.count_by_city(db),
-    }
-
-
-@router.get("/sponsors/stats", response_model=Dict[str, Any])
-def get_sponsor_statistics(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_admin_user),
-) -> Any:
-    """Get detailed sponsor statistics."""
-    check_admin_permission(current_user, AdminPermission.VIEW_ANALYTICS)
-    
-    return {
-        "activeSponsors": crud.user.count_by_role(db).get(UserRole.SPONSOR, 0),
-        "totalBanners": crud.banner.count(db),
-        "activeBanners": crud.banner.count_active(db),
-        "eventsBySponsor": crud.event.count_by_sponsor(db),
-    }
+def calculate_percentage_change(old_value: float, new_value: float) -> float:
+    """Calculate percentage change between two values"""
+    if old_value == 0:
+        return 100 if new_value > 0 else 0
+    return round(((new_value - old_value) / old_value) * 100, 1)

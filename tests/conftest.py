@@ -1,4 +1,5 @@
 from typing import Dict, Generator, Any
+import os
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -9,6 +10,9 @@ from app.main import app
 from app.api import deps
 from app import crud
 from app.schemas.user import UserCreate, UserRole
+
+# Set test environment
+os.environ["ENV_FILE"] = ".env.test"
 
 
 # Use an in-memory SQLite database for testing

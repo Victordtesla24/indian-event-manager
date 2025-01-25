@@ -1,62 +1,44 @@
-import uuid
-from typing import Any, Dict, Optional, Union, List
+from typing import Optional, List
 from datetime import datetime, timedelta
-
+import uuid
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-
-from app.core.security import get_password_hash, verify_password
+from fastapi.encoders import jsonable_encoder
 from app.crud.base import CRUDBase
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+from app.core.security import get_password_hash, verify_password
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
-        return db.query(User).filter(User.email == email).first()
-
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
-        print(f"Creating user with permissions: {obj_in.permissions}")
-        print(f"Admin level: {obj_in.admin_level}")
-        db_obj = User(
-            id=str(uuid.uuid4()),
-            email=obj_in.email,
-            hashed_password=get_password_hash(obj_in.password),
-            full_name=obj_in.full_name,
-            is_superuser=obj_in.is_superuser,
-            is_active=True,
-            role=obj_in.role,
-            admin_level=obj_in.admin_level,
-            permissions=obj_in.permissions,
-        )
-        print(f"Created user object with permissions: {db_obj.permissions}")
-        print(f"Created user object with admin level: {db_obj.admin_level}")
+        obj_in_data = jsonable_encoder(obj_in)
+        if "password" in obj_in_data:
+            hashed_password = get_password_hash(obj_in_data["password"])
+            del obj_in_data["password"]
+            obj_in_data["hashed_password"] = hashed_password
+        obj_in_data["id"] = str(uuid.uuid4())
+        db_obj = User(**obj_in_data)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def update(
-        self,
-        db: Session,
-        *,
-        db_obj: User,
-        obj_in: Union[UserUpdate, Dict[str, Any]]
-    ) -> User:
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.model_dump(exclude_unset=True)
-        if update_data.get("password"):
-            hashed_password = get_password_hash(update_data["password"])
-            del update_data["password"]
-            update_data["hashed_password"] = hashed_password
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
-
     def authenticate(
-        self, db: Session, *, email: str, password: str
+        self, db: Session, *, username: str, password: str
     ) -> Optional[User]:
-        user = self.get_by_email(db, email=email)
+        # Try username (admin) login first
+        if username == "admin":
+            user = (
+                db.query(User)
+                .filter(User.email == "admin@example.com")
+                .first()
+            )
+            if user and verify_password(password, user.hashed_password):
+                return user
+            return None
+        
+        # Fallback to email login
+        user = self.get_by_email(db, email=username)
         if not user:
             return None
         if not verify_password(password, user.hashed_password):
@@ -64,114 +46,64 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 
     def is_active(self, user: User) -> bool:
+        """Check if user is active."""
         return user.is_active
 
-    def is_superuser(self, user: User) -> bool:
-        return user.is_superuser
-
-    def count(self, db: Session) -> int:
-        return db.query(func.count(User.id)).scalar()
+    def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
+        return db.query(User).filter(User.email == email).first()
 
     def count_active(self, db: Session) -> int:
+        """Get count of active users who logged in within 30 days."""
+        thirty_days_ago = datetime.now() - timedelta(days=30)
         return (
-            db.query(func.count(User.id))
-            .filter(User.is_active.is_(True))
-            .scalar()
+            db.query(User)
+            .filter(User.last_login >= thirty_days_ago)
+            .count()
         )
 
-    def count_by_role(self, db: Session) -> Dict[UserRole, int]:
-        results = (
-            db.query(User.role, func.count(User.id))
-            .group_by(User.role)
-            .all()
-        )
-        return {role: count for role, count in results}
-
-    def count_active_since(
+    def count_active_by_date_range(
         self,
         db: Session,
-        *,
-        since: datetime
+        start_date: datetime,
+        end_date: datetime
     ) -> int:
+        """Get count of users who were active within a date range."""
         return (
-            db.query(func.count(User.id))
-            .filter(User.last_active >= since)
-            .scalar()
+            db.query(User)
+            .filter(User.last_login >= start_date)
+            .filter(User.last_login <= end_date)
+            .count()
         )
 
-    def get_users_by_login_count(
+    def get_multi_by_role(
         self,
         db: Session,
         *,
-        limit: int = 10
-    ) -> List[Dict[str, Any]]:
-        results = (
-            db.query(
-                User.id,
-                User.full_name,
-                User.email,
-                User.login_count
-            )
-            .order_by(User.login_count.desc())
+        role: str,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[User]:
+        """Get users by role"""
+        return (
+            db.query(User)
+            .filter(User.role == role)
+            .offset(skip)
             .limit(limit)
             .all()
         )
-        return [
-            {
-                "id": str(r.id),
-                "full_name": r.full_name,
-                "email": r.email,
-                "login_count": r.login_count
-            }
-            for r in results
-        ]
 
-    def get_most_active_users(
+    def update_last_login(
         self,
         db: Session,
         *,
-        limit: int = 10,
-        days: int = 30
-    ) -> List[Dict[str, Any]]:
-        since = datetime.now() - timedelta(days=days)
-        results = (
-            db.query(
-                User.id,
-                User.full_name,
-                User.email,
-                User.last_active,
-                func.count(User.last_active).label('activity_count')
-            )
-            .filter(User.last_active >= since)
-            .group_by(User.id)
-            .order_by(func.count(User.last_active).desc())
-            .limit(limit)
-            .all()
-        )
-        return [
-            {
-                "id": str(r.id),
-                "full_name": r.full_name,
-                "email": r.email,
-                "last_active": r.last_active,
-                "activity_count": r.activity_count
-            }
-            for r in results
-        ]
-
-    def update_login_stats(
-        self,
-        db: Session,
-        *,
-        user_id: str
-    ) -> None:
-        """Update user's login statistics."""
-        user = self.get(db, id=user_id)
-        if user:
-            user.last_login = datetime.now()
-            user.last_active = datetime.now()
-            user.login_count += 1
-            db.commit()
+        db_obj: User
+    ) -> User:
+        """Update user's last login timestamp"""
+        db_obj.last_login = datetime.now()
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
 
 user = CRUDUser(User)

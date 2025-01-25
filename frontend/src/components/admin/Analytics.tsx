@@ -37,10 +37,10 @@ const Analytics: FC = () => {
     const fetchAnalytics = async () => {
       try {
         const { API_ROUTES, fetchApi } = await import('../../utils/api');
-        console.log('Making API request to:', API_ROUTES.ADMIN.ANALYTICS);
+        console.log('Making API request to:', API_ROUTES.admin.analytics);
         const token = localStorage.getItem('token');
         console.log('Using token:', token);
-        const analyticsData = await fetchApi(API_ROUTES.ADMIN.ANALYTICS);
+        const analyticsData = await fetchApi(API_ROUTES.admin.analytics);
         console.log('Received data:', analyticsData);
         setData(analyticsData);
       } catch (err) {

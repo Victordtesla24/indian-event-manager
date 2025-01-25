@@ -1,45 +1,39 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@assets': path.resolve(__dirname, './src/assets'),
-      '@public': path.resolve(__dirname, './public')
-    }
-  },
-  publicDir: 'public',
-  base: '/',
-  build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
-    assetsInlineLimit: 4096,
-    rollupOptions: {
-      output: {
-        assetFileNames: 'assets/[name].[hash][extname]',
-        chunkFileNames: 'js/[name].[hash].js',
-        entryFileNames: 'js/[name].[hash].js'
-      }
-    }
+      '@': resolve(__dirname, './src'),
+    },
   },
   server: {
-    watch: {
-      usePolling: true
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
-    host: true,
-    port: 5174,
-    fs: {
-      strict: false,
-      allow: ['..']
-    }
   },
-  preview: {
-    port: 5174
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['framer-motion', 'react-slick'],
+        },
+      },
+    },
   },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'framer-motion']
-  }
 });

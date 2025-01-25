@@ -11,7 +11,7 @@ services:
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
-        value: postgres://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager?sslmode=require
+        value: postgres://indian_event_manager_user:StkZYHs55ID7fDAQrTO4tMzdE0eGwqeo@dpg-cu9j7b3qf0us73c81in0-a.oregon-postgres.render.com/indian_event_manager?sslmode=require&host=dpg-cu9j7b3qf0us73c81in0-a&port=5432
       - key: SECRET_KEY
         value: DxvVnmQ0wFdZBwNcmyawYEISCpdos-1PhcRc1wf20PU
       - key: ENVIRONMENT
