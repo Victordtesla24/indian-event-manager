@@ -9,17 +9,17 @@ pytest-asyncio==0.25.2  # Async test support
 
 # HTTP testing - Install third (fixed versions for compatibility)
 certifi==2024.12.14
-sniffio==1.3.0
+sniffio==1.3.1
 h11==0.14.0
-httpcore==1.0.2  # Updated to be compatible with httpx
-httpx==0.25.2
+httpcore==1.0.7  # Updated to be compatible with httpx
+httpx==0.28.1
 
 # Test utilities - Install fourth
 coverage==7.6.10  # Code coverage
-pytest-cov==4.1.0  # Coverage plugin for pytest
-pytest-mock==3.12.0  # Mocking support
+pytest-cov==6.0.0  # Coverage plugin for pytest
+pytest-mock==3.14.0  # Mocking support
 
 # Development tools - Install fifth
-pipdeptree==2.24.0  # Dependency analysis
-safety==3.0.1  # Security checking - Updated for packaging compatibility
-mypy==1.8.0  # Type checking
+pipdeptree==2.25.0  # Dependency analysis
+safety==3.2.14  # Security checking - Updated for packaging compatibility
+mypy==1.14.1  # Type checking
