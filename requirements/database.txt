@@ -1,5 +1,5 @@
 # Core dependencies - Install first
-typing-extensions==4.7.1  # Required by SQLAlchemy
+typing-extensions==4.12.2  # Required by SQLAlchemy
 
 # Database - Install second
 SQLAlchemy==2.0.37  # Database ORM
@@ -7,9 +7,9 @@ SQLAlchemy[asyncio]  # Async support
 psycopg2-binary==2.9.10  # PostgreSQL adapter
 
 # Migrations - Install third
-Mako==1.3.0  # Required by alembic
-MarkupSafe==3.0.1  # Required by Mako
-alembic==1.13.1  # Database migrations
+Mako==1.3.8  # Required by alembic
+MarkupSafe==3.0.2  # Required by Mako
+alembic==1.14.1  # Database migrations
 
 # Comments indicate installation order and dependencies
 # Each group should be installed separately to ensure correct resolution
