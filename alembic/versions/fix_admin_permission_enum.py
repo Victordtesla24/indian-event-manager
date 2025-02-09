@@ -27,15 +27,45 @@ def upgrade() -> None:
     """))
     has_old_enum = result.scalar()
 
-    if has_old_enum:
-        # Rename old enum if it exists
-        op.execute("ALTER TYPE adminpermissions RENAME TO adminpermission")
+    # Check if the new enum exists
+    result = conn.execute(text("""
+        SELECT EXISTS (
+            SELECT 1 
+            FROM pg_type 
+            WHERE typname = 'adminpermission'
+        );
+    """))
+    has_new_enum = result.scalar()
 
+    if has_old_enum and not has_new_enum:
+        # Create a backup of the permissions data
+        op.execute("""
+            ALTER TABLE "user" 
+            ALTER COLUMN permissions TYPE text[] 
+            USING permissions::text[]
+        """)
+        
+        # Drop the old enum type
+        op.execute("DROP TYPE adminpermissions")
+        
+        # Create the new enum type
+        op.execute("""
+            CREATE TYPE adminpermission AS ENUM (
+                'MANAGE_USERS',
+                'MANAGE_EVENTS',
+                'MANAGE_SPONSORS',
+                'MANAGE_CONTENT',
+                'VIEW_ANALYTICS',
+                'MANAGE_SETTINGS',
+                'MANAGE_MARKETING'
+            )
+        """)
+        
         # Update the column to use the new enum
         op.execute("""
             ALTER TABLE "user"
             ALTER COLUMN permissions TYPE adminpermission[]
-            USING permissions::text[]::adminpermission[]
+            USING permissions::adminpermission[]
         """)
 
 
@@ -52,10 +82,32 @@ def downgrade() -> None:
     has_new_enum = result.scalar()
 
     if has_new_enum:
-        # Revert the changes
+        # Create a backup of the permissions data
+        op.execute("""
+            ALTER TABLE "user" 
+            ALTER COLUMN permissions TYPE text[] 
+            USING permissions::text[]
+        """)
+        
+        # Drop the new enum type
+        op.execute("DROP TYPE adminpermission")
+        
+        # Create the old enum type
+        op.execute("""
+            CREATE TYPE adminpermissions AS ENUM (
+                'MANAGE_USERS',
+                'MANAGE_EVENTS',
+                'MANAGE_SPONSORS',
+                'MANAGE_CONTENT',
+                'VIEW_ANALYTICS',
+                'MANAGE_SETTINGS',
+                'MANAGE_MARKETING'
+            )
+        """)
+        
+        # Update the column to use the old enum
         op.execute("""
             ALTER TABLE "user"
             ALTER COLUMN permissions TYPE adminpermissions[]
-            USING permissions::text[]::adminpermissions[]
+            USING permissions::adminpermissions[]
         """)
-        op.execute("ALTER TYPE adminpermission RENAME TO adminpermissions")

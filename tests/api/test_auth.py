@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from app import crud
 from app.schemas.user import UserCreate
+from app.core.enums import UserRole
 
 
 def test_register_user(client: TestClient, db: Session) -> None:
@@ -11,12 +12,12 @@ def test_register_user(client: TestClient, db: Session) -> None:
         email=email,
         password=password,
         is_superuser=False,
-        full_name="Test User"
+        full_name="Test User",
+        role=UserRole.USER
     )
-    # Use dict() for compatibility with both v1 and v2
     response = client.post(
         "/api/v1/auth/register",
-        json=user_in.dict()
+        json=user_in.model_dump(exclude_unset=True)
     )
     assert response.status_code == 200
     assert response.json()["email"] == email
@@ -32,7 +33,8 @@ def test_login_user(client: TestClient, db: Session) -> None:
         email=email,
         password=password,
         is_superuser=False,
-        full_name="Test User 2"
+        full_name="Test User 2",
+        role=UserRole.USER
     )
     crud.user.create(db, obj_in=user_in)
     data = {

@@ -1,66 +1,86 @@
 import secrets
 from typing import List, Optional
-
-from pydantic import validator
-from pydantic_settings import BaseSettings
+from decouple import config, Csv  # type: ignore
 
 
-class Settings(BaseSettings):
+class Settings:
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = secrets.token_urlsafe(32)
-    # 60 minutes * 24 hours * 8 days = 8 days
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
-    # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
-    # e.g: '["http://localhost", "http://localhost:4200",
-    # "http://localhost:3000", "http://localhost:8080"]'
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    SECRET_KEY: str = config("SECRET_KEY", default=secrets.token_urlsafe(32))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = config(
+        "ACCESS_TOKEN_EXPIRE_MINUTES",
+        default=60 * 24 * 8,
+        cast=int
+    )
+    BACKEND_CORS_ORIGINS: List[str] = config(
+        "BACKEND_CORS_ORIGINS",
+        default=(
+            "http://localhost:3000,"
+            "https://frontend-ten-alpha-50.vercel.app"
+        ),
+        cast=Csv()
+    )
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(
-        cls, v: List[str]
-    ) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
-
-    PROJECT_NAME: str = "Indian Event Manager"
-    ENVIRONMENT: str = "development"
+    PROJECT_NAME: str = config(
+        "PROJECT_NAME",
+        default="Indian Event Manager"
+    )
+    ENVIRONMENT: str = config("ENVIRONMENT", default="development")
 
     # Database
-    DATABASE_URL: str = "postgresql://postgres:@localhost:5432/app"
+    DATABASE_URL: str = config("DATABASE_URL", default="sqlite:///:memory:")
 
     # Email
-    SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int] = None
-    SMTP_HOST: Optional[str] = None
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    EMAILS_FROM_EMAIL: Optional[str] = None
-    EMAILS_FROM_NAME: Optional[str] = None
+    SMTP_TLS: bool = config("SMTP_TLS", default=True, cast=bool)
+    SMTP_PORT: Optional[int] = config(
+        "SMTP_PORT",
+        default=None,
+        cast=lambda v: int(v) if v else None
+    )
+    SMTP_HOST: Optional[str] = config("SMTP_HOST", default=None)
+    SMTP_USER: Optional[str] = config("SMTP_USER", default=None)
+    SMTP_PASSWORD: Optional[str] = config("SMTP_PASSWORD", default=None)
+    EMAILS_FROM_EMAIL: Optional[str] = config(
+        "EMAILS_FROM_EMAIL",
+        default=None
+    )
+    EMAILS_FROM_NAME: Optional[str] = config(
+        "EMAILS_FROM_NAME",
+        default=config(
+            "PROJECT_NAME",
+            default="Indian Event Manager"
+        )
+    )
 
-    @validator("EMAILS_FROM_NAME")
-    def get_project_name(cls, v: Optional[str], values: dict) -> str:
-        if not v:
-            return values.get("PROJECT_NAME", "")
-        return v
+    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = config(
+        "EMAIL_RESET_TOKEN_EXPIRE_HOURS",
+        default=48,
+        cast=int
+    )
+    EMAIL_TEMPLATES_DIR: str = config(
+        "EMAIL_TEMPLATES_DIR",
+        default=(
+            "/app/app/email-templates/build"
+        )
+    )
+    EMAILS_ENABLED: bool = config("EMAILS_ENABLED", default=False, cast=bool)
 
-    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
-    EMAIL_TEMPLATES_DIR: str = "/app/app/email-templates/build"
-    EMAILS_ENABLED: bool = False
-
-    EMAIL_TEST_USER: str = "test@example.com"
-    FIRST_SUPERUSER: str = "admin@example.com"
-    FIRST_SUPERUSER_PASSWORD: str = "admin"
-    USERS_OPEN_REGISTRATION: bool = True
-
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-        allow_mutation = True
-        validate_assignment = True
-        extra = "allow"
+    EMAIL_TEST_USER: str = config(
+        "EMAIL_TEST_USER",
+        default="test@example.com"
+    )
+    FIRST_SUPERUSER: str = config(
+        "FIRST_SUPERUSER",
+        default="admin@example.com"
+    )
+    FIRST_SUPERUSER_PASSWORD: str = config(
+        "FIRST_SUPERUSER_PASSWORD",
+        default="admin"
+    )
+    USERS_OPEN_REGISTRATION: bool = config(
+        "USERS_OPEN_REGISTRATION",
+        default=True,
+        cast=bool
+    )
 
 
 settings = Settings()

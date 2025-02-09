@@ -1,169 +1,97 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { AdminPermission } from '../../types/admin';
-import UserManagement from './UserManagement';
-import EventApproval from '../admin/EventApproval';
-import Analytics from './Analytics';
-import MarketingManager from './MarketingManager';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useEventStore, Event } from '../../stores/eventStore';
+import Overview from './Overview';
 
-interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
-  totalEvents: number;
-  pendingEvents: number;
-  activeSponsors: number;
-  usersByRole: {
-    user: number;
-    admin: number;
-    sponsor: number;
-  };
-}
-
-const AdminDashboard = () => {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { token, user } = useAuth();
+export default function Dashboard() {
+  const { events, loading, error, fetchEvents } = useEventStore((state) => ({
+    events: state.events,
+    loading: state.loading,
+    error: state.error,
+    fetchEvents: state.fetchEvents,
+  }));
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/v1/admin/analytics', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch analytics data');
-        }
-
-        const data = await response.json();
-        setStats(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [token]);
+    fetchEvents();
+  }, [fetchEvents]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
+      <div className="animate-pulse">
+        <div className="h-64 bg-gray-200 rounded-lg mb-8" />
+        <div className="h-96 bg-gray-200 rounded-lg" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-        {error}
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-semibold text-red-600">{error}</h2>
       </div>
     );
   }
 
-  const hasPermission = (permission: AdminPermission) => {
-    return user?.permissions?.includes(permission) || user?.is_super_admin;
-  };
+  const upcomingEvents = events
+    .filter((event) => new Date(event.date) > new Date())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
-    <div className="space-y-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">Users</h3>
-          <dl className="mt-5 grid grid-cols-1 gap-5">
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Total Users</dt>
-              <dd className="mt-1 text-3xl font-semibold text-primary">
-                {stats?.totalUsers || 0}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Active Users</dt>
-              <dd className="mt-1 text-3xl font-semibold text-green-600">
-                {stats?.activeUsers || 0}
-              </dd>
-            </div>
-          </dl>
+    <div className="space-y-8">
+      <Overview />
+
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">Upcoming Events</h2>
+          <Link
+            to="/admin/events"
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+          >
+            View all
+            <span aria-hidden="true"> →</span>
+          </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">Events</h3>
-          <dl className="mt-5 grid grid-cols-1 gap-5">
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Total Events</dt>
-              <dd className="mt-1 text-3xl font-semibold text-primary">
-                {stats?.totalEvents || 0}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Pending Events</dt>
-              <dd className="mt-1 text-3xl font-semibold text-yellow-600">
-                {stats?.pendingEvents || 0}
-              </dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">Sponsors</h3>
-          <dl className="mt-5 grid grid-cols-1 gap-5">
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Active Sponsors</dt>
-              <dd className="mt-1 text-3xl font-semibold text-primary">
-                {stats?.activeSponsors || 0}
-              </dd>
-            </div>
-          </dl>
+        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <ul className="divide-y divide-gray-200">
+            {upcomingEvents.slice(0, 5).map((event: Event) => (
+              <li key={event.id}>
+                <Link
+                  to={`/events/${event.id}`}
+                  className="block hover:bg-gray-50 transition-colors"
+                >
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <img
+                            className="h-12 w-12 rounded-lg object-cover"
+                            src={event.imageUrl || '/images/event-placeholder.jpg'}
+                            alt=""
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-indigo-600 truncate">
+                            {event.title}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-500 truncate">
+                            {event.venue ? `${event.venue.name}, ${event.venue.city}` : 'Location TBD'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="ml-2 flex-shrink-0 flex">
+                        <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          {new Date(event.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-
-      {/* User Management Section */}
-      {hasPermission(AdminPermission.MANAGE_USERS) && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900">User Management</h3>
-            <UserManagement />
-          </div>
-        </div>
-      )}
-
-      {/* Event Approval Section */}
-      {hasPermission(AdminPermission.MANAGE_EVENTS) && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900">Event Approval</h3>
-            <EventApproval />
-          </div>
-        </div>
-      )}
-
-      {/* Analytics Section */}
-      {hasPermission(AdminPermission.VIEW_ANALYTICS) && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900">Analytics</h3>
-            <Analytics />
-          </div>
-        </div>
-      )}
-
-      {/* Marketing Section */}
-      {hasPermission(AdminPermission.MANAGE_MARKETING) && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900">Marketing</h3>
-            <MarketingManager />
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
-export default AdminDashboard;
+}

@@ -1,135 +1,125 @@
-import { FC, useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useEffect, useState, useCallback } from 'react';
+import { Event } from '../../stores/eventStore';
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  event_date: string;
-  location: string;
-  city: string;
-  event_type: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  organizer: {
-    id: string;
-    full_name: string;
-    email: string;
-  };
+interface EventApprovalProps {
+  onApprove: (eventId: number) => Promise<void>;
+  onReject: (eventId: number) => Promise<void>;
 }
 
-const EventApproval: FC<{ limit?: number }> = ({ limit }) => {
-  const [events, setEvents] = useState<Event[]>([]);
+export default function EventApproval({ onApprove, onReject }: EventApprovalProps) {
+  const [pendingEvents, setPendingEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+
+  const fetchPendingEvents = useCallback(async () => {
+    try {
+      const response = await fetch('/api/v1/admin/events/pending');
+      if (!response.ok) {
+        throw new Error('Failed to fetch pending events');
+      }
+      const data = await response.json();
+      setPendingEvents(data);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch('/api/v1/events/?status=PENDING', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+    fetchPendingEvents();
+  }, [fetchPendingEvents]);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch pending events');
-        }
-
-        const data = await response.json();
-        setEvents(limit ? data.slice(0, limit) : data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, [token, limit]);
-
-  const handleApproval = async (eventId: string, status: 'APPROVED' | 'REJECTED') => {
+  const handleApprove = async (eventId: number) => {
     try {
-      const response = await fetch(`/api/v1/events/${eventId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update event status');
-      }
-
-      setEvents(events.filter(event => event.id !== eventId));
+      await onApprove(eventId);
+      await fetchPendingEvents();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update event');
+      setError((err as Error).message);
+    }
+  };
+
+  const handleReject = async (eventId: number) => {
+    try {
+      await onReject(eventId);
+      await fetchPendingEvents();
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
+      <div className="animate-pulse">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-32 bg-gray-200 rounded-lg mb-4" />
+        ))}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-        {error}
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-semibold text-red-600">{error}</h2>
       </div>
     );
   }
 
-  if (events.length === 0) {
+  if (pendingEvents.length === 0) {
     return (
-      <div className="text-gray-500 text-center py-4">
-        No pending events to approve
+      <div className="text-center py-12">
+        <h2 className="text-lg font-medium text-gray-900">No pending events</h2>
+        <p className="mt-2 text-sm text-gray-500">
+          All events have been reviewed
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {events.map((event) => (
+    <div className="space-y-6">
+      {pendingEvents.map((event) => (
         <div
           key={event.id}
-          className="bg-white shadow rounded-lg p-4 border border-gray-200"
+          className="bg-white shadow overflow-hidden sm:rounded-lg"
         >
-          <div className="flex justify-between items-start">
-            <div>
-              <h4 className="text-lg font-medium text-gray-900">{event.title}</h4>
-              <p className="text-sm text-gray-500 mt-1">{event.description}</p>
-              <div className="mt-2 text-sm text-gray-500">
-                <p>Date: {new Date(event.event_date).toLocaleDateString()}</p>
-                <p>Location: {event.location}, {event.city}</p>
-                <p>Type: {event.event_type}</p>
-                <p>Organizer: {event.organizer.full_name}</p>
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium leading-6 text-gray-900">
+                  {event.title}
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                  {event.description}
+                </p>
+                <div className="mt-2 text-sm text-gray-500">
+                  <p>Date: {new Date(event.date).toLocaleDateString()}</p>
+                  <p>
+                    Venue: {event.venue ? `${event.venue.name}, ${event.venue.city}` : 'Location TBD'}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleApproval(event.id, 'APPROVED')}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleApproval(event.id, 'REJECTED')}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                Reject
-              </button>
+              <div className="ml-4 flex-shrink-0 flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => handleReject(parseInt(event.id))}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleApprove(parseInt(event.id))}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Approve
+                </button>
+              </div>
             </div>
           </div>
         </div>
       ))}
     </div>
   );
-};
-
-export default EventApproval;
+}

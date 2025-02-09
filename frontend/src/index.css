@@ -2,40 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@layer base {
+  :root {
+    font-family: 'Inter var', Inter, system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    /* Base colors */
+    --color-background: #ffffff;
+    --color-text: #1f2937;
+    --color-text-light: #6b7280;
+    
+    /* Animation curves */
+    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.4, 0, 0.2, 1.5);
+  }
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  html {
+    scroll-behavior: smooth;
+  }
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Selection styles */
+  ::selection {
+    background-color: theme('colors.primary.500');
+    color: white;
+  }
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mask-linear-fade {
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  }
 }
 
 /* Slick Carousel Custom Styles */
 .slick-dots {
   bottom: 25px !important;
+  z-index: 10;
 }
 
 .slick-dots li button:before {
   color: white !important;
   font-size: 12px !important;
   opacity: 0.5 !important;
+  transition: opacity 0.3s var(--ease-out);
 }
 
 .slick-dots li.slick-active button:before {
   opacity: 1 !important;
+  transform: scale(1.2);
+}
+
+.slick-slide {
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.slick-active {
+  z-index: 1;
 }
 
 /* Custom Scrollbar */
@@ -45,14 +113,36 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: theme('colors.gray.100');
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: theme('colors.gray.300');
   border-radius: 4px;
+  transition: background-color 0.3s var(--ease-out);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: theme('colors.gray.400');
+}
+
+/* Loading Skeleton Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    theme('colors.gray.100') 25%,
+    theme('colors.gray.200') 37%,
+    theme('colors.gray.100') 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
 }

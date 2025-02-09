@@ -28,9 +28,29 @@ jobs:
           pip install --no-deps -r requirements/database.txt
           pip install -r requirements/test.txt
       
-      - name: Run tests
-        run: pytest
-      
+      - name: Code Quality
+        run: |
+          pip install flake8 black
+          flake8 .
+          black --check .
+
+      - name: Security Scan
+        run: |
+          pip install bandit safety
+          bandit -r .
+          safety check
+
+      - name: Run tests with coverage
+        run: |
+          pip install pytest-cov
+          pytest --cov=app --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
+
       - name: Build wheel
         run: python setup.py bdist_wheel
       

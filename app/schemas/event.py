@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class EventBase(BaseModel):
@@ -33,8 +33,7 @@ class EventInDBBase(EventBase):
     status: str
     organizer_id: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Event(EventInDBBase):

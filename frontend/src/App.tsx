@@ -1,94 +1,47 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import adminRoutes from './routes/adminRoutes';
-
-// Lazy load main components
-const Home = lazy(() => import('./pages/Home'));
-const Events = lazy(() => import('./pages/Events'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const CreateEvent = lazy(() => import('./pages/CreateEvent'));
-
-// Loading component for suspense fallback
-const Loader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
-  </div>
-);
-
-// Protected route wrapper
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-};
+import { RouterProvider } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { router } from "./routes";
+import { Suspense } from "react";
+import { ToastProvider } from "./contexts/ToastContext";
+import "./App.css";
 
 const App = () => {
   return (
-    <Router>
-      <AuthProvider>
-        <Suspense fallback={<Loader />}>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-
-            {/* Protected routes */}
-            <Route
-              path="/events"
-              element={
-                <ProtectedRoute>
-                  <Events />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/create-event"
-              element={
-                <ProtectedRoute>
-                  <CreateEvent />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Admin routes */}
-            {adminRoutes.map((route) => (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={
-                  <ProtectedRoute>
-                    {route.element}
-                  </ProtectedRoute>
-                }
-              >
-                {route.children?.map((child) => (
-                  <Route
-                    key={child.path || 'index'}
-                    index={child.index}
-                    path={child.path}
-                    element={child.element}
-                  />
-                ))}
-              </Route>
-            ))}
-
-            {/* Catch all redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </AuthProvider>
-    </Router>
+    <ToastProvider>
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center">
+            <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-primary-600"></div>
+          </div>
+        }
+      >
+        <RouterProvider router={router} />
+      </Suspense>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: "#4ade80",
+              secondary: "#fff",
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#fff",
+            },
+          },
+        }}
+      />
+    </ToastProvider>
   );
 };
 

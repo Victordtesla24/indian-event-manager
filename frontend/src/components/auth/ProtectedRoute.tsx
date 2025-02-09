@@ -1,42 +1,46 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import type { UserRole } from '../../types/user';
+import { Navigate, useLocation } from "react-router-dom";
+import { UserRole, AdminPermission } from "../../core/enums";
+import { useAuthStore } from "../../stores/authStore";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
-  allowedRoles?: UserRole[];
+  children: React.ReactNode;
+  roles?: UserRole[];
+  permissions?: AdminPermission[];
   redirectTo?: string;
 }
 
-const ProtectedRoute = ({ 
-  children, 
-  allowedRoles = [], 
-  redirectTo = "/" 
-}: ProtectedRouteProps) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  roles,
+  permissions,
+  redirectTo = "/login",
+}) => {
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const location = useLocation();
-  const { isAuthenticated, hasRole, user } = useAuth();
 
-  // Show loading state while checking authentication
-  if (!user && localStorage.getItem('token')) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
-      </div>
-    );
+  if (isLoading) {
+    return <div>Loading...</div>; // TODO: Replace with proper loading component
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthenticated || !user) {
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // Check role permissions if roles are specified
-  if (allowedRoles.length > 0 && !hasRole(allowedRoles)) {
-    return <Navigate to={redirectTo} replace />;
+  // Check role-based access
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Check permission-based access for admin users
+  if (permissions) {
+    if (user.role !== UserRole.ADMIN || !user.permissions) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+    
+    if (!permissions.every((permission) => user.permissions?.includes(permission))) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return <>{children}</>;
 };
-
-export default ProtectedRoute;

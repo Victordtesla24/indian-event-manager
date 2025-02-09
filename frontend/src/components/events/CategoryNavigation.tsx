@@ -1,47 +1,36 @@
-import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
-import useLanguageStore from '../../stores/languageStore';
-import type { Category } from '../../stores/eventStore';
-import { EVENT_CATEGORIES } from '../../utils/constants';
+import { Link } from 'react-router-dom';
+import { Category } from '../../stores/eventStore';
+import { CATEGORY_LABELS, CATEGORY_LIST } from '../../constants/categories';
 
-const categories = Object.values(EVENT_CATEGORIES);
+interface CategoryNavigationProps {
+  activeCategory: Category | 'all';
+  onCategoryChange: (category: Category | 'all') => void;
+}
 
-const CategoryNavigation = () => {
-  const navigate = useNavigate();
-  const { category } = useParams<{ category?: string }>();
-  const { getTranslation } = useLanguageStore();
-
-  const handleCategoryClick = (cat: Category | 'All') => {
-    if (cat === 'All') {
-      navigate('/events');
-    } else {
-      navigate(`/category/${cat.toLowerCase()}`);
-    }
+export default function CategoryNavigation({
+  activeCategory,
+  onCategoryChange,
+}: CategoryNavigationProps) {
+  const handleCategoryClick = (category: Category | 'all') => {
+    onCategoryChange(category);
   };
 
   return (
-    <div className="sticky top-0 z-40 bg-white shadow-sm overflow-x-auto">
-      <div className="flex justify-center space-x-4 p-4">
-        {categories.map((cat) => (
-          <motion.button
-            key={cat}
-            type="button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`px-4 py-2 rounded-full transition-all ${
-              (category ? category.toLowerCase() === cat.toLowerCase() : cat === 'All')
-                ? 'bg-red-600 text-white' 
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-            onClick={() => handleCategoryClick(cat)}
-            aria-label={`Filter ${cat} events`}
-          >
-            {getTranslation(cat, 'categories')}
-          </motion.button>
-        ))}
-      </div>
-    </div>
+    <nav className="flex space-x-4 overflow-x-auto pb-4">
+      {CATEGORY_LIST.map((category) => (
+        <Link
+          key={category}
+          to={category === 'all' ? '/events' : `/${category}`}
+          className={`px-3 py-2 rounded-md text-sm font-medium ${
+            activeCategory === category
+              ? 'bg-indigo-100 text-indigo-700'
+              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+          }`}
+          onClick={() => handleCategoryClick(category)}
+        >
+          {category === 'all' ? 'All Events' : CATEGORY_LABELS[category as Category]}
+        </Link>
+      ))}
+    </nav>
   );
-};
-
-export default CategoryNavigation;
+}

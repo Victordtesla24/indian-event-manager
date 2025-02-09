@@ -1,78 +1,71 @@
-import { useState, type FC, type FormEvent } from 'react';
-import { uploadFile } from '../../utils/fileUpload';
-
-export interface Event {
-  title: string;
-  description: string;
-  location: string;
-  city: string;
-  event_date: string;
-  event_type: string;
-  image_url?: string;
-}
+import { useState, useEffect } from "react";
+import { Event, EventStatus } from "../../types/event";
 
 interface EventFormProps {
-  onSubmit: (eventData: Event) => Promise<void>;
-  initialData?: Event;
+  event?: Event | null;
+  onSubmit: (data: Partial<Event>) => void;
+  onCancel: () => void;
 }
 
-const EventForm: FC<EventFormProps> = ({ onSubmit, initialData }) => {
-  const [title, setTitle] = useState(initialData?.title ?? '');
-  const [description, setDescription] = useState(initialData?.description ?? '');
-  const [location, setLocation] = useState(initialData?.location ?? '');
-  const [city, setCity] = useState(initialData?.city ?? '');
-  const [eventDate, setEventDate] = useState(initialData?.event_date ?? '');
-  const [eventType, setEventType] = useState(initialData?.event_type ?? '');
-  const [image, setImage] = useState<File | null>(null);
-  const [imageUrl] = useState(initialData?.image_url ?? '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const EventForm = ({ event, onSubmit, onCancel }: EventFormProps) => {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    date: "",
+    location: "",
+    capacity: 0,
+    status: "DRAFT" as EventStatus,
+    imageUrl: "",
+    organizer: {
+      name: "",
+      contact: "",
+    },
+    price: 0,
+    duration: "",
+  });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setImage(e.target.files[0]);
+  useEffect(() => {
+    if (event) {
+      setFormData({
+        title: event.title,
+        description: event.description,
+        date: new Date(event.date).toISOString().split("T")[0],
+        location: event.location || "",
+        capacity: event.capacity,
+        status: event.status,
+        imageUrl: event.imageUrl || "",
+        organizer: {
+          name: event.organizer?.name || "",
+          contact: event.organizer?.contact || "",
+        },
+        price: event.price,
+        duration: event.duration,
+      });
     }
+  }, [event]);
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "capacity" ? parseInt(value) || 0 : value,
+    }));
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      let finalImageUrl = imageUrl;
-      if (image) {
-        const uploadResult = await uploadFile(image, 'events');
-        if (uploadResult.error) {
-          throw new Error(uploadResult.error);
-        }
-        finalImageUrl = uploadResult.url;
-      }
-
-      await onSubmit({
-        title,
-        description,
-        location,
-        city,
-        event_date: eventDate,
-        event_type: eventType,
-        image_url: finalImageUrl,
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create event');
-    } finally {
-      setLoading(false);
-    }
+    onSubmit({
+      ...formData,
+      date: new Date(formData.date).toISOString(),
+    });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="bg-red-50 p-4 rounded-md">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-
       <div>
         <label
           htmlFor="title"
@@ -82,11 +75,96 @@ const EventForm: FC<EventFormProps> = ({ onSubmit, initialData }) => {
         </label>
         <input
           type="text"
+          name="title"
           id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          value={formData.title}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="organizer-name"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Organizer Name
+        </label>
+        <input
+          type="text"
+          name="organizer.name"
+          id="organizer-name"
+          required
+          value={formData.organizer.name}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              organizer: { ...prev.organizer, name: e.target.value },
+            }))
+          }
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="organizer-contact"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Organizer Contact
+        </label>
+        <input
+          type="text"
+          name="organizer.contact"
+          id="organizer-contact"
+          required
+          value={formData.organizer.contact}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              organizer: { ...prev.organizer, contact: e.target.value },
+            }))
+          }
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="price"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Price (AUD)
+        </label>
+        <input
+          type="number"
+          name="price"
+          id="price"
+          min="0"
+          required
+          value={formData.price}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="duration"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Duration
+        </label>
+        <input
+          type="text"
+          name="duration"
+          id="duration"
+          required
+          value={formData.duration}
+          onChange={handleChange}
+          placeholder="e.g., 2 hours"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         />
       </div>
 
@@ -98,123 +176,122 @@ const EventForm: FC<EventFormProps> = ({ onSubmit, initialData }) => {
           Description
         </label>
         <textarea
+          name="description"
           id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
           required
-          rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          value={formData.description}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="location"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Location
-          </label>
-          <input
-            type="text"
-            id="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="city"
-            className="block text-sm font-medium text-gray-700"
-          >
-            City
-          </label>
-          <input
-            type="text"
-            id="city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="eventDate"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Event Date
-          </label>
-          <input
-            type="datetime-local"
-            id="eventDate"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="eventType"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Event Type
-          </label>
-          <select
-            id="eventType"
-            value={eventType}
-            onChange={(e) => setEventType(e.target.value)}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="">Select type</option>
-            <option value="cultural">Cultural</option>
-            <option value="festival">Festival</option>
-            <option value="concert">Concert</option>
-            <option value="exhibition">Exhibition</option>
-            <option value="workshop">Workshop</option>
-          </select>
-        </div>
       </div>
 
       <div>
         <label
-          htmlFor="image"
+          htmlFor="date"
           className="block text-sm font-medium text-gray-700"
         >
-          Event Image
+          Date
         </label>
         <input
-          type="file"
-          id="image"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+          type="date"
+          name="date"
+          id="date"
+          required
+          value={formData.date}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         />
-        {imageUrl && (
-          <img
-            src={imageUrl}
-            alt="Event preview"
-            className="mt-2 h-32 w-auto object-cover rounded-md"
-          />
-        )}
       </div>
 
-      <div className="flex justify-end">
+      <div>
+        <label
+          htmlFor="location"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Location
+        </label>
+        <input
+          type="text"
+          name="location"
+          id="location"
+          required
+          value={formData.location}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="capacity"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Capacity
+        </label>
+        <input
+          type="number"
+          name="capacity"
+          id="capacity"
+          min="1"
+          required
+          value={formData.capacity}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="status"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          value={formData.status}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        >
+          <option value="DRAFT">Draft</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+
+      <div>
+        <label
+          htmlFor="imageUrl"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Image URL
+        </label>
+        <input
+          type="url"
+          name="imageUrl"
+          id="imageUrl"
+          value={formData.imageUrl}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          placeholder="https://example.com/image.jpg"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          Cancel
+        </button>
         <button
           type="submit"
-          disabled={loading}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
-          {loading ? 'Creating...' : initialData ? 'Update Event' : 'Create Event'}
+          Save
         </button>
       </div>
     </form>

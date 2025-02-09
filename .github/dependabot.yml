@@ -1,31 +1,53 @@
 version: 2
 updates:
-  # Python dependencies
+  # Backend Python dependencies
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+      day: "monday"
+    target-branch: "main"
     labels:
       - "dependencies"
       - "python"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    versioning-strategy: "lockfile-only"
+    groups:
+      python-packages:
+        patterns:
+          - "*"
 
-  # Frontend dependencies
+  # Frontend npm dependencies
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+      day: "monday"
+    target-branch: "main"
     labels:
       - "dependencies"
       - "javascript"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    versioning-strategy: "lockfile-only"
+    groups:
+      javascript-packages:
+        patterns:
+          - "*"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+      day: "monday"
+    target-branch: "main"
     labels:
       - "dependencies"
       - "github-actions"
+    commit-message:
+      prefix: "chore"
+      include: "scope"

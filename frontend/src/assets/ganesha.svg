@@ -1,10 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="800px" height="800px" viewBox="0 0 800 800" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <g stroke="none" stroke-width="1" fill="#800000" fill-rule="evenodd">
-        <path d="M400,150 C450,150 500,200 500,300 C500,400 450,450 400,450 C350,450 300,400 300,300 C300,200 350,150 400,150 Z" fill-rule="nonzero"/>
-        <path d="M350,250 C375,250 400,275 400,325 C400,375 375,400 350,400 C325,400 300,375 300,325 C300,275 325,250 350,250 Z" fill-rule="nonzero"/>
-        <path d="M400,400 C425,400 450,425 450,475 C450,525 425,550 400,550 C375,550 350,525 350,475 C350,425 375,400 400,400 Z" fill-rule="nonzero"/>
-        <path d="M400,500 C425,500 450,525 450,575 C450,625 425,650 400,650 C375,650 350,625 350,575 C350,525 375,500 400,500 Z" fill-rule="nonzero"/>
-        <path d="M450,300 C475,300 500,325 500,375 C500,425 475,450 450,450 C425,450 400,425 400,375 C400,325 425,300 450,300 Z" fill-rule="nonzero"/>
-    </g>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="248" fill="#DC2626"/>
+  
+  <!-- Stylized Ganesha Symbol -->
+  <path d="M256 96
+    C192 96 140 148 140 212
+    C140 276 192 328 256 328
+    C320 328 372 276 372 212
+    C372 148 320 96 256 96Z
+    M256 308
+    C203 308 160 265 160 212
+    C160 159 203 116 256 116
+    C309 116 352 159 352 212
+    C352 265 309 308 256 308Z" 
+    fill="white"/>
+  
+  <!-- Om Symbol -->
+  <path d="M256 352
+    C203 352 160 395 160 448
+    M256 352
+    C309 352 352 395 352 448
+    M256 352
+    L256 448" 
+    stroke="white" 
+    stroke-width="20" 
+    stroke-linecap="round"/>
+  
+  <!-- Decorative Elements -->
+  <circle cx="256" cy="212" r="40" fill="white"/>
+  <path d="M216 172L296 252M296 172L216 252" 
+    stroke="white" 
+    stroke-width="12" 
+    stroke-linecap="round"/>
 </svg>

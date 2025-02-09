@@ -1,102 +1,92 @@
 import axios from 'axios';
 
-export const API_ROUTES = {
-  auth: {
-    login: '/auth/login',
-    register: '/auth/register',
-    refresh: '/auth/refresh'
-  },
-  events: {
-    list: '/events',
-    create: '/events',
-    update: (id: string) => `/events/${id}`,
-    delete: (id: string) => `/events/${id}`,
-    approve: (id: string) => `/events/${id}/approve`
-  },
-  users: {
-    list: '/users',
-    create: '/users',
-    update: (id: string) => `/users/${id}`,
-    delete: (id: string) => `/users/${id}`
-  },
-  admin: {
-    analytics: '/admin/analytics',
-    dashboard: '/admin/dashboard',
-    settings: '/admin/settings'
-  },
-  uploads: '/uploads'
-};
+interface ApiResponse<T = any> {
+  data: T;
+  message?: string;
+  token?: string;
+}
 
-export const fetchApi = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers
+interface AxiosErrorWithRetry extends Error {
+  config: any;
+  response?: {
+    status: number;
   };
-
-  const response = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
-    ...options,
-    headers
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
-};
+  _retry?: boolean;
+}
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add a request interceptor
+// Request interceptor
 api.interceptors.request.use(
-  (config) => {
+  (config: any) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  (error: unknown) => {
     return Promise.reject(error);
   }
 );
 
-// Add a response interceptor
+// Response interceptor
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  (response: any) => {
+    return response;
+  },
+  async (error: unknown) => {
+    // Type guard for axios error
+    const isAxiosError = (err: unknown): err is AxiosErrorWithRetry => {
+      return err instanceof Error && 'config' in err;
+    };
 
-    // If the error status is 401 and there is no originalRequest._retry flag,
-    // it means the token has expired and we need to refresh it
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if (!isAxiosError(error)) {
+      return Promise.reject(error);
+    }
+
+    const originalRequest = error.config;
+    if (error._retry) {
+      return Promise.reject(error);
+    }
+
+    // If error is 401 and we haven't retried yet
+    if (error.response?.status === 401) {
+      error._retry = true;
 
       try {
+        // Try to refresh the token
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
-          refreshToken,
+        if (!refreshToken) {
+          throw new Error('No refresh token');
+        }
+
+        const response = await api.post<ApiResponse>('/auth/refresh', {
+          refresh_token: refreshToken,
         });
 
-        const { token } = response.data;
-        localStorage.setItem('token', token);
-
-        // Retry the original request with the new token
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api(originalRequest);
-      } catch (error) {
-        // If refresh token fails, redirect to login
+        if (response.data?.token) {
+          localStorage.setItem('token', response.data.token);
+          
+          // Update the original request with new token
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+          }
+          
+          // Retry the original request
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // If refresh fails, clear auth and redirect to login
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
-        return Promise.reject(error);
+        return Promise.reject(refreshError);
       }
     }
 

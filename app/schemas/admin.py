@@ -1,8 +1,7 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
-from pydantic import BaseModel
-from app.models.user import AdminLevel
-from app.core.permissions import AdminPermission
+from pydantic import BaseModel, ConfigDict
+from app.core.enums import AdminLevel, AdminPermission
 
 
 class AdminAuditLogBase(BaseModel):
@@ -11,6 +10,12 @@ class AdminAuditLogBase(BaseModel):
     entity_id: Optional[str] = None
     details: Optional[Dict[str, Any]] = None
     ip_address: Optional[str] = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+        use_enum_values=True
+    )
 
 
 class AdminAuditLogCreate(AdminAuditLogBase):
@@ -22,16 +27,16 @@ class AdminAuditLog(AdminAuditLogBase):
     admin_id: str
     created_at: datetime
 
-    class Config:
-        orm_mode = True
-
 
 class AdminUserUpdate(BaseModel):
     admin_level: Optional[AdminLevel] = None
-    permissions: Optional[list[AdminPermission]] = None
+    permissions: Optional[List[AdminPermission]] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+        use_enum_values=True
+    )
 
 
 class AdminStats(BaseModel):
@@ -41,18 +46,20 @@ class AdminStats(BaseModel):
     pending_events: int
     active_sponsors: int
     users_by_role: Dict[str, int]
-    recent_events: list[Dict[str, Any]]
+    recent_events: List[Dict[str, Any]]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 
 class AdminUserActivity(BaseModel):
     active_today: int
     active_this_week: int
     active_this_month: int
-    users_by_login_count: list[Dict[str, Any]]
-    top_active_users: list[Dict[str, Any]]
+    users_by_login_count: List[Dict[str, Any]]
+    top_active_users: List[Dict[str, Any]]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )

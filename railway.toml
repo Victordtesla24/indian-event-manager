@@ -12,7 +12,28 @@ restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
 [env]
-PYTHON_VERSION = "3.9"
+PYTHON_VERSION = "3.11"
+
+# Resource Limits
+[resources]
+cpu = "0.5"
+memory = "512MB"
+storage = "1GB"
+
+# Monitoring and Logging
+[monitoring]
+enabled = true
+metrics = ["cpu", "memory", "requests", "errors"]
+alerting = true
+errorThreshold = 5
+responseTimeThreshold = "2s"
+
+# Backup Configuration
+[backup]
+enabled = true
+schedule = "0 0 * * *"  # Daily backup at midnight
+retention = 7  # Keep backups for 7 days
+type = "postgres_dump"
 
 # Environment variables will be set in Railway Dashboard
 # Required variables:
@@ -33,7 +54,17 @@ envVars = [
     "ACCESS_TOKEN_EXPIRE_MINUTES",
     "ENVIRONMENT"
 ]
+autoscaling = true
+minInstances = 1
+maxInstances = 3
+scaleUpThreshold = 80  # CPU usage percentage
+scaleDownThreshold = 20
 
 [[services.ports]]
 port = "$PORT"
 internal = false
+
+[[services.volumes]]
+path = "/app/static/uploads"
+size = "1GB"
+type = "persistent"

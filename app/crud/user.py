@@ -16,6 +16,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             hashed_password = get_password_hash(obj_in_data["password"])
             del obj_in_data["password"]
             obj_in_data["hashed_password"] = hashed_password
+        if "model_config" in obj_in_data:
+            del obj_in_data["model_config"]
         obj_in_data["id"] = str(uuid.uuid4())
         db_obj = User(**obj_in_data)
         db.add(db_obj)
@@ -36,7 +38,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             if user and verify_password(password, user.hashed_password):
                 return user
             return None
-        
+
         # Fallback to email login
         user = self.get_by_email(db, email=username)
         if not user:

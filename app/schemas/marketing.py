@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class MarketingCampaignBase(BaseModel):
@@ -40,8 +40,9 @@ class MarketingCampaign(MarketingCampaignBase):
     updated_at: datetime
     metrics: MarketingCampaignMetrics
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 
 class MarketingCampaignList(BaseModel):

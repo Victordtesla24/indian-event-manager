@@ -1,4 +1,12 @@
 import logging
+import os
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+project_root = str(Path(__file__).parent.parent.absolute())
+sys.path.insert(0, project_root)
+
 from app.db.init_db import init_db
 from app.db.session import SessionLocal
 
@@ -18,4 +26,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main() 
+    main()

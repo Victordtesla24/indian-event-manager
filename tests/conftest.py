@@ -9,7 +9,8 @@ from app.db.base import Base
 from app.main import app
 from app.api import deps
 from app import crud
-from app.schemas.user import UserCreate, UserRole
+from app.schemas.user import UserCreate
+from app.core.enums import UserRole, AdminLevel, AdminPermission
 
 # Set test environment
 os.environ["ENV_FILE"] = ".env.test"
@@ -32,6 +33,20 @@ TestingSessionLocal = sessionmaker(
 
 def init_test_db(db: Session) -> None:
     """Initialize test database with required test data."""
+    # Create admin user
+    admin = crud.user.get_by_email(db, email="admin@example.com")
+    if not admin:
+        admin_in = UserCreate(
+            email="admin@example.com",
+            password="admin123",
+            is_superuser=True,
+            full_name="Admin User",
+            role=UserRole.ADMIN,
+            admin_level=AdminLevel.SUPER_ADMIN,
+            permissions=[perm for perm in AdminPermission]
+        )
+        crud.user.create(db, obj_in=admin_in)
+
     # Create test user
     user = crud.user.get_by_email(db, email="test@example.com")
     if not user:
@@ -70,18 +85,31 @@ def client(db: Session) -> Generator[TestClient, Any, None]:
     app.dependency_overrides[deps.get_db] = override_get_db
 
     # Create test client
-    with TestClient(app) as test_client:
-        yield test_client
-
-    # Cleanup
-    app.dependency_overrides.clear()
+    client = TestClient(app)
+    try:
+        yield client
+    finally:
+        # Cleanup
+        app.dependency_overrides.clear()
 
 
 def get_superuser_token_headers(client: TestClient) -> Dict[str, str]:
     """Helper function to get superuser token headers for testing."""
-    # For testing purposes, we'll return an empty dict
-    # In a real implementation, this would create a superuser and get token
-    return {}
+    login_data = {
+        "username": "admin@example.com",
+        "password": "admin123",
+        "grant_type": "password"
+    }
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    response = client.post(
+        "/api/v1/auth/login",
+        data=login_data,
+        headers=headers
+    )
+    tokens = response.json()
+    return {"Authorization": f"Bearer {tokens['access_token']}"}
 
 
 @pytest.fixture(scope="module")

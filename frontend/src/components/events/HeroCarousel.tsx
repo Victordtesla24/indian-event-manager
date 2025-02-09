@@ -1,72 +1,182 @@
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-import '../../styles/carousel.css';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEventStore } from '../../stores/eventStore';
 
-const events = [
-  {
-    id: '1',
-    title: 'Shikayala Gelo Ek!',
-    imageUrl: '/images/events/gettyimages-1427976248-612x612.jpg'
-  },
-  {
-    id: '2',
-    title: 'Jyachi Tyachi Love Story',
-    imageUrl: '/images/events/gettyimages-1702362815-612x612.jpg'
-  },
-  {
-    id: '3',
-    title: 'Punha Sahi Re Sahi',
-    imageUrl: '/images/events/gettyimages-1735021730-612x612.jpg'
-  }
-];
+export default function HeroCarousel() {
+  const events = useEventStore((state) => state.events.slice(0, 5));
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
 
-const HeroCarousel = () => {
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 5000,
-    arrows: false,
-    appendDots: (dots: React.ReactNode) => (
-      <div style={{ position: 'absolute', bottom: '40px', width: '100%' }}>
-        <ul className="flex justify-center gap-3">{dots}</ul>
-      </div>
-    ),
-    customPaging: () => (
-      <button type="button" className="w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" />
-    )
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % events.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [events.length]);
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
   };
 
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+  };
+
+  const paginate = (newDirection: number) => {
+    setDirection(newDirection);
+    setCurrentIndex((prevIndex) => {
+      let nextIndex = prevIndex + newDirection;
+      if (nextIndex < 0) nextIndex = events.length - 1;
+      if (nextIndex >= events.length) nextIndex = 0;
+      return nextIndex;
+    });
+  };
+
+  if (!events.length) return null;
+
+  const currentEvent = events[currentIndex];
+
   return (
-    <div className="relative w-full h-[calc(100vh-4rem)] min-h-[500px] max-h-[800px]">
-      <Slider {...settings} className="h-full">
-        {events.map((event) => (
-          <div key={event.id} className="relative h-full">
-            <img
-              src={event.imageUrl}
-              alt={event.title}
-              className="w-full h-full object-cover"
+    <div className="relative w-full overflow-hidden bg-gray-100">
+      {/* Desktop aspect ratio */}
+      <div className="hidden md:block" style={{ paddingTop: '25%' }}>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent">
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={currentIndex}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+              className="absolute inset-0"
+            >
+              <Link to={`/events/${currentEvent.id}`} className="block w-full h-full group">
+                <img
+                  src={currentEvent.image_url || '/images/event-placeholder.jpg'}
+                  alt={currentEvent.title}
+                  className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </Link>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Mobile aspect ratio */}
+      <div className="md:hidden" style={{ paddingTop: '100%' }}>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent">
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={currentIndex}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+              className="absolute inset-0"
+            >
+              <Link to={`/events/${currentEvent.id}`} className="block w-full h-full group">
+                <img
+                  src={currentEvent.image_url || '/images/event-placeholder.jpg'}
+                  alt={currentEvent.title}
+                  className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </Link>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Navigation dots with progress bar */}
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center space-x-3">
+        {events.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => {
+              setDirection(index > currentIndex ? 1 : -1);
+              setCurrentIndex(index);
+            }}
+            className="relative"
+            aria-label={`Go to slide ${index + 1}`}
+          >
+            <div
+              className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                index === currentIndex ? 'bg-red-600' : 'bg-white/70 hover:bg-white'
+              }`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-              <div className="absolute bottom-[15%] left-[10%] text-white max-w-xl">
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">{event.title}</h2>
-                <button
-                  type="button"
-                  className="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-lg text-lg font-medium transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                >
-                  Book Now
-                </button>
-              </div>
-            </div>
-          </div>
+            {index === currentIndex && (
+              <svg
+                className="absolute -inset-1 text-red-600 animate-[spin_5s_linear_infinite]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                />
+                <path
+                  className="opacity-75"
+                  d="M12 2a10 10 0 0 1 10 10"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+          </button>
         ))}
-      </Slider>
+      </div>
+
+      {/* Arrow navigation */}
+      <button
+        onClick={() => paginate(-1)}
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
+        aria-label="Previous slide"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        onClick={() => paginate(1)}
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
+        aria-label="Next slide"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
   );
-};
-
-export default HeroCarousel;
+}

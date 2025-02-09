@@ -1,58 +1,29 @@
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr
-from enum import Enum
-
-
-class UserRole(str, Enum):
-    USER = "user"
-    ADMIN = "admin"
-    SPONSOR = "sponsor"
-
-
-class AdminLevel(str, Enum):
-    SUPER_ADMIN = "SUPER_ADMIN"
-    ADMIN = "ADMIN"
-    MODERATOR = "MODERATOR"
-
-
-class AdminPermission(str, Enum):
-    MANAGE_USERS = "MANAGE_USERS"
-    MANAGE_EVENTS = "MANAGE_EVENTS"
-    MANAGE_SPONSORS = "MANAGE_SPONSORS"
-    MANAGE_CONTENT = "MANAGE_CONTENT"
-    VIEW_ANALYTICS = "VIEW_ANALYTICS"
-    MANAGE_SETTINGS = "MANAGE_SETTINGS"
-    MANAGE_MARKETING = "MANAGE_MARKETING"
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from app.core.enums import UserRole, AdminLevel, AdminPermission
 
 
 # Shared properties
 class UserBase(BaseModel):
     email: Optional[EmailStr] = None
-    is_active: Optional[bool] = True
-    is_superuser: bool = False
+    is_active: bool = Field(default=True)
+    is_superuser: bool = Field(default=False)
     full_name: Optional[str] = None
-    role: UserRole = UserRole.USER
+    role: UserRole = Field(default=UserRole.USER)
     admin_level: Optional[AdminLevel] = None
     permissions: Optional[List[AdminPermission]] = None
 
-    class Config:
-        """Pydantic v1 compatibility mode"""
-        orm_mode = True
-        validate_assignment = True
-        use_enum_values = True
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+        use_enum_values=True
+    )
 
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     email: EmailStr
     password: str
-
-    def dict(self, *args, **kwargs):
-        """Compatibility method for both v1 and v2"""
-        if hasattr(self, 'model_dump'):
-            return self.model_dump(*args, **kwargs)
-        return super().dict(*args, **kwargs)
 
 
 # Properties to receive via API on update

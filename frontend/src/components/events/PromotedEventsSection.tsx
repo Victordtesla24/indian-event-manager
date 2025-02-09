@@ -1,52 +1,108 @@
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useEventStore } from '../../stores/eventStore';
-import useLanguageStore from '../../stores/languageStore';
-import EventCard from './EventCard';
+import { Event } from '../../stores/eventStore';
+import { EVENT_CATEGORIES, CATEGORY_LABELS } from '../../constants/categories';
 
-const promotedSections = ['Natak', 'Events', 'Cinema'] as const;
-type PromotedSection = typeof promotedSections[number];
+const FEATURED_SECTIONS = [
+  EVENT_CATEGORIES.NATAK,
+  EVENT_CATEGORIES.CINEMA,
+  EVENT_CATEGORIES.EVENTS,
+] as const;
 
-const PromotedEventsSection = () => {
-  const { events } = useEventStore();
-  const { getTranslation } = useLanguageStore();
+export default function PromotedEventsSection() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filterEvents = (section: PromotedSection) => 
-    events
-      .filter(event => event.category === section)
-      .slice(0, 5);
+  useEffect(() => {
+    const fetchPromotedEvents = async () => {
+      try {
+        const response = await fetch('/api/v1/events/promoted');
+        if (!response.ok) {
+          throw new Error('Failed to fetch promoted events');
+        }
+        const data = await response.json();
+        setEvents(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPromotedEvents();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="animate-pulse">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-64 bg-gray-200 rounded-lg mb-8" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-semibold text-red-600">{error}</h2>
+      </div>
+    );
+  }
 
   return (
-    <>
-      {promotedSections.map((section) => (
-        <div key={section} className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {getTranslation(section, 'categories')}
-            </h2>
-            <Link 
-              to={`/category/${section.toLowerCase()}`} 
-              className="text-red-600 hover:text-red-700 font-medium"
-            >
-              {getTranslation('seeAll', 'buttons')} →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {filterEvents(section).map((event) => (
-              <motion.div 
-                key={event.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <EventCard event={event} />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </>
-  );
-};
+    <div className="space-y-12">
+      {FEATURED_SECTIONS.map((section) => {
+        const sectionEvents = events.filter((event) => event.category === section);
 
-export default PromotedEventsSection;
+        if (sectionEvents.length === 0) return null;
+
+        return (
+          <section key={section}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+                {CATEGORY_LABELS[section]}
+              </h2>
+              <Link
+                to={`/${section}`}
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+              >
+                View all
+                <span aria-hidden="true"> →</span>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 lg:gap-x-8">
+              {sectionEvents.map((event) => (
+                <Link
+                  key={event.id}
+                  to={`/events/${event.id}`}
+                  className="group relative bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-200"
+                >
+                  <div className="aspect-w-3 aspect-h-2 bg-gray-200 sm:aspect-none sm:h-48">
+                    <img
+                      src={event.imageUrl || '/images/event-placeholder.jpg'}
+                      alt={event.title}
+                      className="w-full h-full object-center object-cover sm:w-full sm:h-full"
+                    />
+                  </div>
+                  <div className="flex-1 p-4 space-y-2">
+                    <h3 className="text-sm font-medium text-gray-900">{event.title}</h3>
+                    <p className="text-sm text-gray-500">{event.description}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-900">
+                        {new Date(event.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm text-gray-500">{event.venue?.city || 'Location TBD'}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}

@@ -1,103 +1,106 @@
 import { useState, useEffect } from 'react';
-import { images } from '../../assets/images';
+import { motion, AnimatePresence } from 'framer-motion';
 
-interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface OptimizedImageProps {
   src: string;
-  fallbackSrc?: string;
-  width?: number;
-  preload?: boolean;
+  alt: string;
+  className?: string;
+  aspectRatio?: string;
+  objectFit?: 'cover' | 'contain' | 'fill';
+  priority?: boolean;
+  onLoad?: () => void;
 }
 
 const OptimizedImage = ({
   src,
-  fallbackSrc = images.ganesha,
-  width,
-  preload = false,
+  alt,
   className = '',
-  alt = '',
-  ...props
+  aspectRatio = 'aspect-[2/3]',
+  objectFit = 'cover',
+  priority = false,
+  onLoad
 }: OptimizedImageProps) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [loadProgress, setLoadProgress] = useState(0);
+  const [currentSrc, setCurrentSrc] = useState<string>('');
+  const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
-    const loadImage = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        setLoadProgress(0);
-        
-        if (preload) {
-          const img = new Image();
-          img.src = src;
-          await new Promise<void>((resolve, reject) => {
-            img.onload = () => {
-              setLoadProgress(100);
-              resolve();
-            };
-            img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-          });
-        }
-        
-        setIsLoading(false);
-        setLoadProgress(100);
-      } catch (err) {
-        console.error('Failed to load image:', err);
-        setError(err as Error);
-        setIsLoading(false);
-      }
+    // Reset states when src changes
+    setIsLoading(true);
+    setError(false);
+
+    // Generate tiny placeholder (in production this would be pre-generated)
+    const placeholderSrc = `${src}?w=20&blur=10`;
+    
+    // Start with placeholder
+    setCurrentSrc(placeholderSrc);
+
+    // Load full image
+    const img = new Image();
+    img.src = src;
+    
+    img.onload = () => {
+      setCurrentSrc(src);
+      setIsLoading(false);
+      onLoad?.();
     };
 
-    loadImage();
-  }, [src, preload]);
+    img.onerror = () => {
+      setError(true);
+      setIsLoading(false);
+    };
+  }, [src, onLoad]);
+
+  // Generate srcSet for responsive images
+  const generateSrcSet = () => {
+    const widths = [320, 640, 960, 1280, 1920];
+    return widths
+      .map(width => `${src}?w=${width} ${width}w`)
+      .join(', ');
+  };
 
   return (
-    <div className={`relative ${className}`}>
-      <img
-        src={error ? fallbackSrc : src}
-        alt={alt}
-        className={`transition-opacity duration-300 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
-        } ${className}`}
-        onLoad={() => {
-          setIsLoading(false);
-          setLoadProgress(100);
-        }}
-        onError={() => {
-          setError(new Error(`Failed to load image: ${src}`));
-        }}
-        {...props}
-      />
-      
-      {isLoading && (
-        <div 
-          className="absolute inset-0 bg-gray-200"
-          aria-busy="true"
-          aria-label={`Loading ${alt}`}
-        >
-          <div
-            className="h-1 bg-orange-600 transition-all duration-300"
-            style={{ width: `${loadProgress}%` }}
-            role="progressbar"
-            aria-label={`Loading progress for ${alt}`}
-            aria-valuenow={loadProgress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            tabIndex={0}
+    <div className={`relative overflow-hidden ${aspectRatio} ${className}`}>
+      <AnimatePresence mode="wait">
+        {error ? (
+          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+            <span className="text-gray-400">Failed to load image</span>
+          </div>
+        ) : (
+          <motion.img
+            key={currentSrc}
+            src={currentSrc}
+            srcSet={!isLoading ? generateSrcSet() : undefined}
+            sizes="(max-width: 768px) 100vw, 50vw"
+            alt={alt}
+            className={`
+              w-full h-full transition-transform duration-300
+              ${objectFit === 'cover' ? 'object-cover' : ''}
+              ${objectFit === 'contain' ? 'object-contain' : ''}
+              ${isLoading ? 'scale-105 blur-lg' : 'scale-100 blur-0'}
+            `}
+            loading={priority ? 'eager' : 'lazy'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           />
-        </div>
-      )}
-      
-      {error && !isLoading && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center bg-gray-100"
-          role="alert"
-          aria-label={`Failed to load image: ${alt}`}
-        >
-          <span className="text-gray-500">Failed to load image</span>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Loading overlay */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            className="absolute inset-0 bg-gray-100/80 backdrop-blur-sm"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

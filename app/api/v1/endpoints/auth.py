@@ -1,5 +1,6 @@
 from datetime import timedelta
 from typing import Any
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -9,6 +10,7 @@ from app.core import security
 from app.core.config import settings
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=schemas.TokenWithUser)
@@ -54,11 +56,20 @@ def register(
     """
     Create new user.
     """
-    user = crud.user.get_by_email(db, email=user_in.email)
-    if user:
+    try:
+        logger.info(f"Attempting to register user with data: {user_in}")
+        user = crud.user.get_by_email(db, email=user_in.email)
+        if user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
+        user = crud.user.create(db, obj_in=user_in)
+        return user
+    except Exception as e:
+        logger.error(f"Registration failed with error: {str(e)}")
+        logger.exception(e)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
         )
-    user = crud.user.create(db, obj_in=user_in)
-    return user

@@ -28,15 +28,30 @@ jobs:
           cd frontend
           npm run typecheck
       
-      - name: Lint
+      - name: Lint and accessibility check
         run: |
           cd frontend
+          npm install -D eslint-plugin-jsx-a11y
           npm run lint
       
-      - name: Build
+      - name: Run tests with coverage
         run: |
           cd frontend
+          npm run test -- --coverage --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}'
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          fail_ci_if_error: true
+      
+      - name: Build and analyze bundle
+        run: |
+          cd frontend
+          npm install -D webpack-bundle-analyzer
           npm run build
+          npx webpack-bundle-analyzer dist/stats.json
       
       - name: Cache node modules
         uses: actions/cache@v3
